@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Studio — The Website Your Brand Deserves</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-19) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- Framer Motion -->
+  <script src="https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js"></script>
+
+  <!-- hls.js -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15"></script>
+
+  <!-- Google Fonts: Instrument Serif (italic) + Barlow -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind config -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            heading: ["'Instrument Serif'", "serif"],
+            body: ["'Barlow'", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    html, body { background: #000; color: #fff; }
+    body { font-family: 'Barlow', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+    /* Liquid Glass — subtle */
+    .liquid-glass {
+      background: rgba(255, 255, 255, 0.01);
+      background-blend-mode: luminosity;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: none;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    .liquid-glass::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.4px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 20%,
+        rgba(255,255,255,0)    40%, rgba(255,255,255,0)    60%,
+        rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.45) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+    }
+
+    /* Liquid Glass — strong */
+    .liquid-glass-strong {
+      background: rgba(255, 255, 255, 0.01);
+      background-blend-mode: luminosity;
+      backdrop-filter: blur(50px);
+      -webkit-backdrop-filter: blur(50px);
+      border: none;
+      box-shadow: 4px 4px 4px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.15);
+      position: relative;
+      overflow: hidden;
+    }
+    .liquid-glass-strong::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.4px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 20%,
+        rgba(255,255,255,0)   40%, rgba(255,255,255,0)   60%,
+        rgba(255,255,255,0.2) 80%, rgba(255,255,255,0.5) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+    (function () {
+      const _err = console.error;
+      console.error = function (...args) {
+        const msg = args[0];
+        if (typeof msg === 'string' && msg.includes('unique "key" prop')) return;
+        _err.apply(console, args);
+      };
+    })();
+  </script>
+
+  <script type="text/babel">
+    const { useEffect, useRef, useState } = React;
+    const { motion } = window.Motion;
+
+    // ───── URLs ─────
+    const HERO_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260307_083826_e938b29f-a43a-41ec-a153-3d4730578ab8.mp4';
+    const HLS_START  = 'https://stream.mux.com/9JXDljEVWYwWu01PUkAemafDugK89o01BR6zqJ3aS9u00A.m3u8';
+    const HLS_STATS  = 'https://stream.mux.com/NcU3HlHeF7CUL86azTTzpy3Tlb00d6iF3BmCdFslMJYM.m3u8';
+    const HLS_CTA    = 'https://stream.mux.com/8wrHPCX2dC3msyYU9ObwqNdm00u3ViXvOSHUMRYSEe5Q.m3u8';
+    const GIF_1 = 'https://motionsites.ai/assets/hero-finlytic-preview-CV9g0FHP.gif';
+    const GIF_2 = 'https://motionsites.ai/assets/hero-wealth-preview-B70idl_u.gif';
+
+    // ───── Lucide icons (inline) ─────
+    const lucideBase = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
+    function ArrowUpRight({ size = 16, className = '' }) {
+      return (<svg {...lucideBase} width={size} height={size} className={className}><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg>);
+    }
+    function Play({ size = 16, className = '' }) {
+      return (<svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><polygon points="6 3 20 12 6 21 6 3"/></svg>);
+    }
+    function Zap({ size = 16, className = '' }) {
+      return (<svg {...lucideBase} width={size} height={size} className={className}><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>);
+    }
+    function Palette({ size = 16, className = '' }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} className={className}>
+          <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+          <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+          <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+          <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+          <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+        </svg>
+      );
+    }
+    function BarChart3({ size = 16, className = '' }) {
+      return (<svg {...lucideBase} width={size} height={size} className={className}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>);
+    }
+    function Shield({ size = 16, className = '' }) {
+      return (<svg {...lucideBase} width={size} height={size} className={className}><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>);
+    }
+
+    // ───── BlurText (word-by-word stagger via IntersectionObserver) ─────
+    function BlurText({ text, className = '', style, delayMs = 200, stepDur = 0.35 }) {
+      const ref = useRef(null);
+      const [visible, setVisible] = useState(false);
+      useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach((e) => { if (e.isIntersecting) { setVisible(true); io.disconnect(); } });
+        }, { threshold: 0.1 });
+        io.observe(el);
+        return () => io.disconnect();
+      }, []);
+      const words = text.split(' ');
+      return (
+        <p ref={ref} className={className} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', rowGap: '0.1em', ...style }}>
+          {words.map((w, i) => (
+            <motion.span
+              key={i}
+              initial={{ filter: 'blur(10px)', opacity: 0, y: 50 }}
+              animate={visible ? { filter: ['blur(10px)', 'blur(5px)', 'blur(0px)'], opacity: [0, 0.5, 1], y: [50, -5, 0] } : {}}
+              transition={{ duration: stepDur * 2, times: [0, 0.5, 1], ease: 'easeOut', delay: (i * delayMs) / 1000 }}
+              style={{ display: 'inline-block', marginRight: '0.28em' }}
+            >
+              {w}
+            </motion.span>
+          ))}
+        </p>
+      );
+    }
+
+    // ───── HlsBg ─────
+    function HlsBg({ src, className = '', filter }) {
+      const videoRef = useRef(null);
+      useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+        const Hls = window.Hls;
+        let hls = null;
+        if (Hls && Hls.isSupported()) {
+          hls = new Hls({ autoStartLoad: true });
+          hls.loadSource(src);
+          hls.attachMedia(video);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = src;
+          video.play().catch(() => {});
+        }
+        return () => { if (hls) hls.destroy(); };
+      }, [src]);
+      return (
+        <video ref={videoRef} autoPlay loop muted playsInline
+               className={`absolute inset-0 w-full h-full object-cover ${className}`}
+               style={{ filter, zIndex: 0 }} />
+      );
+    }
+
+    // ───── Reusable building blocks ─────
+    function Badge({ children }) {
+      return (
+        <span className="liquid-glass rounded-full px-3.5 py-1 text-xs font-medium text-white font-body">
+          {children}
+        </span>
+      );
+    }
+    function SectionHeading({ children, className = '' }) {
+      return (
+        <h2 className={`text-4xl md:text-5xl lg:text-6xl font-heading italic text-white tracking-tight leading-[0.9] ${className}`}>
+          {children}
+        </h2>
+      );
+    }
+    function BodyText({ children, className = '' }) {
+      return (
+        <p className={`text-white/70 font-body font-light text-sm md:text-base leading-relaxed ${className}`}>
+          {children}
+        </p>
+      );
+    }
+    function FadeBars({ top = 200, bottom = 200 }) {
+      return (
+        <>
+          {top > 0 && <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{ height: top, background: 'linear-gradient(to bottom, #000, transparent)' }} />}
+          {bottom > 0 && <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ height: bottom, background: 'linear-gradient(to top, #000, transparent)' }} />}
+        </>
+      );
+    }
+
+    // ───── Navbar ─────
+    function Navbar() {
+      const links = ['Home', 'Services', 'Work', 'Process', 'Pricing'];
+      return (
+        <nav className="fixed top-4 left-0 right-0 z-50 flex items-center justify-between px-8 lg:px-16 py-3">
+          {/* Logo */}
+          <div className="h-12 w-12 liquid-glass rounded-full flex items-center justify-center">
+            <span className="font-heading italic text-2xl text-white leading-none">s</span>
+          </div>
+
+          {/* Center pill */}
+          <div className="hidden md:flex liquid-glass rounded-full px-1.5 py-1 items-center gap-1">
+            {links.map((l) => (
+              <a key={l} href="#" className="px-3 py-2 text-sm font-medium text-foreground/90 font-body text-white whitespace-nowrap">{l}</a>
+            ))}
+            <a href="#" className="ml-1 flex items-center gap-1 bg-white text-black rounded-full px-3.5 py-1.5 text-sm font-medium whitespace-nowrap">
+              Get Started <ArrowUpRight size={14} />
+            </a>
+          </div>
+
+          {/* Mobile placeholder */}
+          <div className="md:hidden w-12" />
+        </nav>
+      );
+    }
+
+    // ───── Hero ─────
+    function Hero() {
+      const partners = ['Stripe', 'Vercel', 'Linear', 'Notion', 'Figma'];
+      return (
+        <section className="relative overflow-visible bg-black" style={{ height: 1000 }}>
+          {/* Hero video — positioned with top:20% */}
+          <video
+            autoPlay loop muted playsInline preload="auto"
+            className="absolute left-0 w-full h-auto object-contain"
+            style={{ top: '20%', zIndex: 0 }}
+            src={HERO_VIDEO}
+          />
+          <div className="absolute inset-0 bg-black/5" style={{ zIndex: 0 }} />
+          <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{ height: 300, background: 'linear-gradient(to bottom, transparent, #000)' }} />
+
+          {/* Content */}
+          <div className="relative z-10 flex flex-col items-center text-center px-4" style={{ paddingTop: 150 }}>
+            {/* Badge pill */}
+            <div className="liquid-glass rounded-full px-1 py-1 flex items-center gap-2 mb-6">
+              <span className="bg-white text-black rounded-full px-3 py-1 text-xs font-semibold">New</span>
+              <span className="text-xs text-white/90 pr-3">Introducing AI-powered web design.</span>
+            </div>
+
+            {/* Heading */}
+            <BlurText
+              text="The Website Your Brand Deserves"
+              delayMs={100}
+              className="text-6xl md:text-7xl lg:text-[5.5rem] font-heading italic text-white leading-[0.8] max-w-2xl"
+              style={{ letterSpacing: '-4px', justifyContent: 'center' }}
+            />
+
+            {/* Subtext */}
+            <motion.p
+              initial={{ filter: 'blur(10px)', opacity: 0, y: 20 }}
+              animate={{ filter: 'blur(0px)', opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.6, ease: 'easeOut' }}
+              className="mt-6 text-sm md:text-base text-white font-body font-light leading-tight max-w-md"
+            >
+              Stunning design. Blazing performance. Built by AI, refined by experts. This is web design, wildly reimagined.
+            </motion.p>
+
+            {/* CTAs */}
+            <motion.div
+              initial={{ filter: 'blur(10px)', opacity: 0, y: 20 }}
+              animate={{ filter: 'blur(0px)', opacity: 1, y: 0 }}
+              transition={{ delay: 1.1, duration: 0.6, ease: 'easeOut' }}
+              className="mt-8 flex items-center gap-4"
+            >
+              <a href="#" className="liquid-glass-strong rounded-full px-5 py-2.5 text-sm font-medium text-white inline-flex items-center gap-2">
+                Get Started <ArrowUpRight size={16} />
+              </a>
+              <a href="#" className="inline-flex items-center gap-2 text-sm font-medium text-white">
+                <Play size={14} /> Watch the Film
+              </a>
+            </motion.div>
+
+            {/* Partners */}
+            <div className="mt-auto pt-16 pb-8 flex flex-col items-center gap-6">
+              <span className="liquid-glass rounded-full px-3.5 py-1 text-xs font-medium text-white font-body">
+                Trusted by the teams behind
+              </span>
+              <div className="flex items-center flex-wrap justify-center gap-12 md:gap-16">
+                {partners.map((p) => (
+                  <span key={p} className="text-2xl md:text-3xl font-heading italic text-white tracking-tight">{p}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // ───── StartSection ─────
+    function StartSection() {
+      return (
+        <section className="relative overflow-hidden" style={{ minHeight: 600 }}>
+          <HlsBg src={HLS_START} />
+          <FadeBars top={200} bottom={200} />
+          <div className="relative z-10 flex flex-col items-center text-center px-6 py-32 gap-6" style={{ minHeight: 500 }}>
+            <Badge>How It Works</Badge>
+            <SectionHeading className="max-w-3xl">You dream it. We ship it.</SectionHeading>
+            <BodyText className="max-w-xl text-white/60">
+              Share your vision. Our AI handles the rest—wireframes, design, code, launch. All in days, not quarters.
+            </BodyText>
+            <a href="#" className="liquid-glass-strong rounded-full px-6 py-3 text-sm font-medium text-white inline-flex items-center gap-2 mt-2">
+              Get Started <ArrowUpRight size={16} />
+            </a>
+          </div>
+        </section>
+      );
+    }
+
+    // ───── FeaturesChess ─────
+    function FeaturesChessRow({ reverse, title, body, btn, gif }) {
+      return (
+        <div className={`flex flex-col ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-8 md:gap-12`}>
+          <div className="flex-1 flex flex-col gap-4">
+            <SectionHeading className="text-3xl md:text-4xl lg:text-5xl">{title}</SectionHeading>
+            <BodyText className="max-w-md text-white/60">{body}</BodyText>
+            <a href="#" className="liquid-glass-strong rounded-full px-5 py-2.5 text-sm font-medium text-white inline-flex items-center gap-2 self-start mt-2">
+              {btn} <ArrowUpRight size={14} />
+            </a>
+          </div>
+          <div className="flex-1 liquid-glass rounded-2xl overflow-hidden w-full">
+            <img src={gif} alt="" className="w-full h-full object-cover" loading="lazy" />
+          </div>
+        </div>
+      );
+    }
+    function FeaturesChess() {
+      return (
+        <section className="px-6 md:px-12 lg:px-20 py-24 bg-black">
+          <div className="max-w-7xl mx-auto flex flex-col gap-8 mb-16 text-center items-center">
+            <Badge>Capabilities</Badge>
+            <SectionHeading className="max-w-3xl mx-auto">Pro features. Zero complexity.</SectionHeading>
+          </div>
+          <div className="max-w-7xl mx-auto flex flex-col gap-20">
+            <FeaturesChessRow
+              reverse={false}
+              title="Designed to convert. Built to perform."
+              body="Every pixel is intentional. Our AI studies what works across thousands of top sites—then builds yours to outperform them all."
+              btn="Learn more"
+              gif={GIF_1}
+            />
+            <FeaturesChessRow
+              reverse={true}
+              title="It gets smarter. Automatically."
+              body="Your site evolves on its own. AI monitors every click, scroll, and conversion—then optimizes in real time. No manual updates. Ever."
+              btn="See how it works"
+              gif={GIF_2}
+            />
+          </div>
+        </section>
+      );
+    }
+
+    // ───── FeaturesGrid ─────
+    function FeaturesGrid() {
+      const features = [
+        { Icon: Zap,       title: 'Days, Not Months',     body: "Concept to launch at a pace that redefines fast. Because waiting isn't a strategy." },
+        { Icon: Palette,   title: 'Obsessively Crafted',  body: 'Every detail considered. Every element refined. Design so precise, it feels inevitable.' },
+        { Icon: BarChart3, title: 'Built to Convert',     body: 'Layouts informed by data. Decisions backed by performance. Results you can measure.' },
+        { Icon: Shield,    title: 'Secure by Default',    body: 'Enterprise-grade protection comes standard. SSL, DDoS mitigation, compliance. All included.' },
+      ];
+      return (
+        <section className="px-6 md:px-12 lg:px-20 py-24 bg-black">
+          <div className="max-w-7xl mx-auto flex flex-col gap-8 mb-16 text-center items-center">
+            <Badge>Why Us</Badge>
+            <SectionHeading className="max-w-3xl mx-auto">The difference is everything.</SectionHeading>
+          </div>
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map(({ Icon, title, body }) => (
+              <div key={title} className="liquid-glass rounded-2xl p-6 flex flex-col gap-4">
+                <div className="liquid-glass-strong rounded-full w-10 h-10 flex items-center justify-center text-white">
+                  <Icon size={16} />
+                </div>
+                <h3 className="text-xl font-heading italic text-white leading-tight">{title}</h3>
+                <p className="text-sm text-white/60 font-body font-light leading-relaxed">{body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    }
+
+    // ───── Stats ─────
+    function Stats() {
+      const items = [
+        { value: '200+',   label: 'Sites launched' },
+        { value: '98%',    label: 'Client satisfaction' },
+        { value: '3.2x',   label: 'More conversions' },
+        { value: '5 days', label: 'Average delivery' },
+      ];
+      return (
+        <section className="relative overflow-hidden">
+          <HlsBg src={HLS_STATS} filter="saturate(0)" />
+          <FadeBars top={200} bottom={200} />
+          <div className="relative z-10 px-6 md:px-12 lg:px-20 py-32">
+            <div className="max-w-6xl mx-auto liquid-glass rounded-3xl p-12 md:p-16 grid grid-cols-2 md:grid-cols-4 gap-10 text-center">
+              {items.map((s) => (
+                <div key={s.label} className="flex flex-col items-center gap-2">
+                  <div className="text-4xl md:text-5xl lg:text-6xl font-heading italic text-white">{s.value}</div>
+                  <div className="text-white/60 font-body font-light text-sm">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // ───── Testimonials ─────
+    function Testimonials() {
+      const quotes = [
+        { quote: 'A complete rebuild in five days. The result outperformed everything we\'d spent months building before.', name: 'Sarah Chen', role: 'CEO, Luminary' },
+        { quote: "Conversions up 4x. That's not a typo. The design just works differently when it's built on real data.",  name: 'Marcus Webb', role: 'Head of Growth, Arcline' },
+        { quote: "They didn't just design our site. They defined our brand. World-class doesn't begin to cover it.",       name: 'Elena Voss', role: 'Brand Director, Helix' },
+      ];
+      return (
+        <section className="px-6 md:px-12 lg:px-20 py-24 bg-black">
+          <div className="max-w-7xl mx-auto flex flex-col gap-8 mb-16 text-center items-center">
+            <Badge>What They Say</Badge>
+            <SectionHeading className="max-w-3xl mx-auto">Don't take our word for it.</SectionHeading>
+          </div>
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+            {quotes.map((q) => (
+              <div key={q.name} className="liquid-glass rounded-2xl p-8 flex flex-col gap-5">
+                <p className="text-white/80 font-body font-light text-sm italic leading-relaxed">"{q.quote}"</p>
+                <div className="mt-auto">
+                  <p className="text-white font-body font-medium text-sm">{q.name}</p>
+                  <p className="text-white/50 font-body font-light text-xs">{q.role}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    }
+
+    // ───── CtaFooter ─────
+    function CtaFooter() {
+      return (
+        <section className="relative overflow-hidden">
+          <HlsBg src={HLS_CTA} />
+          <FadeBars top={200} bottom={200} />
+          <div className="relative z-10 px-6 md:px-12 lg:px-20 py-32">
+            <div className="max-w-4xl mx-auto flex flex-col items-center text-center gap-6">
+              <h2 className="text-5xl md:text-6xl lg:text-7xl font-heading italic text-white leading-[0.85] max-w-3xl">
+                Your next website starts here.
+              </h2>
+              <BodyText className="max-w-xl text-white/70">
+                Book a free strategy call. See what AI-powered design can do. No commitment, no pressure. Just possibilities.
+              </BodyText>
+              <div className="flex flex-wrap items-center justify-center gap-4 mt-2">
+                <a href="#" className="liquid-glass-strong rounded-full px-6 py-3 text-sm font-medium text-white inline-flex items-center gap-2">
+                  Book a Call <ArrowUpRight size={14} />
+                </a>
+                <a href="#" className="bg-white text-black rounded-full px-6 py-3 text-sm font-medium">
+                  View Pricing
+                </a>
+              </div>
+
+              <div className="mt-32 pt-8 border-t border-white/10 w-full flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/40">
+                <span>© 2026 Studio. All rights reserved.</span>
+                <div className="flex items-center gap-6">
+                  <a href="#" className="hover:text-white">Privacy</a>
+                  <a href="#" className="hover:text-white">Terms</a>
+                  <a href="#" className="hover:text-white">Contact</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      return (
+        <div className="bg-black text-white">
+          <div className="relative z-10">
+            <Navbar />
+            <Hero />
+            <div className="bg-black">
+              <StartSection />
+              <FeaturesChess />
+              <FeaturesGrid />
+              <Stats />
+              <Testimonials />
+              <CtaFooter />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

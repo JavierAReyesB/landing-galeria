@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unleash The Full Power</title>
+
+  <!-- Tailwind v4 (Play CDN / browser build) -->
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+
+  <!-- React 18.3.1 (UMD) + Babel
+       Nota: React 19 ya no publica builds UMD en unpkg (404), así que para la
+       versión single-file con Babel-in-browser usamos React 18. La API utilizada
+       (hooks, createRoot, Fragment) es 100% compatible. El spec original era
+       React 19 vía Vite — ver README. -->
+  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+
+  <!-- GSAP + ScrollTrigger + ScrollToPlugin -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollToPlugin.min.js"></script>
+
+  <!-- hls.js -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind v4 @theme tokens -->
+  <style type="text/tailwindcss">
+    @theme {
+      --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      --font-serif: "Instrument Serif", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+      --font-dirtyline: "Dirtyline36Daysoftype2022", sans-serif;
+      --animate-marquee: marquee 20s linear infinite;
+    }
+    @keyframes marquee {
+      100% { transform: translateX(-50%); }
+    }
+  </style>
+
+  <style>
+    @font-face {
+      font-family: 'Dirtyline36Daysoftype2022';
+      src: url('Dirtyline-36daysoftype-2022.woff2') format('woff2');
+      font-style: normal;
+      font-weight: normal;
+      text-rendering: optimizeLegibility;
+      font-display: swap;
+    }
+
+    html, body { margin: 0; padding: 0; background-color: black; color: white; }
+    body { font-family: 'Manrope', sans-serif; }
+
+    /* ScrollFloat */
+    .scroll-float-text { display: inline-block; }
+    .char { display: inline-block; }
+
+    /* ===== PillNav CSS ===== */
+    .pill-nav-container {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      font-family: 'Manrope', sans-serif;
+    }
+    .pill-nav { display: flex; align-items: center; background-color: transparent; padding: 0; gap: 0; }
+    .pill-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background-color: #000;
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    .logo-svg-container { display: flex; align-items: center; justify-content: center; }
+    .pill-nav-items {
+      background-color: #000;
+      border-radius: 50px;
+      padding: 4px;
+      border: 2px solid #000;
+      overflow: hidden;
+    }
+    .pill-list { display: flex; align-items: center; gap: 4px; list-style: none; margin: 0; padding: 0; }
+    .pill {
+      position: relative;
+      display: block;
+      padding: 8px 24px;
+      border-radius: 50px;
+      text-decoration: none;
+      color: #000;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      overflow: hidden;
+      background-color: #f0f0f0;
+      transition: background-color 0.3s ease;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+    .pill.is-active { background-color: #e0e0e0; }
+    .hover-circle {
+      position: absolute;
+      background-color: #000;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      transform: scale(0);
+    }
+    .label-stack { position: relative; display: block; z-index: 1; overflow: hidden; height: 1.2em; }
+    .pill-label, .pill-label-hover { display: block; line-height: 1.2em; text-align: center; }
+    .pill-label-hover { position: absolute; top: 0; left: 0; width: 100%; color: #fff; }
+    .mobile-menu-button {
+      background: #000;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 0;
+      border: 2px solid #000;
+    }
+    .hamburger-line { width: 24px; height: 2px; background-color: #fff; display: block; transition: transform 0.3s ease; }
+    .mobile-menu-popover {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #000;
+      border-radius: 16px;
+      padding: 16px;
+      min-width: 200px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .mobile-menu-popover.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+    .mobile-menu-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+    .mobile-menu-link {
+      color: #fff;
+      text-decoration: none;
+      font-size: 1.1rem;
+      display: block;
+      text-align: center;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    @media (min-width: 769px) { .mobile-only { display: none !important; } }
+    @media (max-width: 768px) { .desktop-only { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- =========================================================
+       SCROLL VIDEO — full-screen fixed video that scrubs on scroll
+       ========================================================= -->
+  <script type="text/babel">
+    const { useEffect: useEffectSV, useRef: useRefSV, useState: useStateSV } = React;
+
+    function ScrollVideo({ src, className }) {
+      const videoRef = useRefSV(null);
+      const wrapperRef = useRefSV(null);
+      const [loadProgress, setLoadProgress] = useStateSV(0);
+      const [canPlay, setCanPlay] = useStateSV(false);
+
+      useEffectSV(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        let hls;
+        let cleanupHls = () => {};
+
+        if (window.Hls && window.Hls.isSupported()) {
+          hls = new window.Hls({
+            maxBufferLength: 120,
+            maxMaxBufferLength: 600,
+            maxBufferSize: 200 * 1024 * 1024,
+            startPosition: 0,
+            capLevelToPlayerSize: false,
+            startLevel: -1,
+            autoStartLoad: true,
+          });
+          hls.loadSource(src);
+          hls.attachMedia(video);
+          hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
+            const maxLevel = hls.levels.length - 1;
+            hls.currentLevel = maxLevel;
+            hls.startLevel = maxLevel;
+          });
+          hls.on(window.Hls.Events.FRAG_BUFFERED, () => {
+            if (!video.duration) return;
+            const buffered = video.buffered;
+            if (buffered.length > 0) {
+              const bufferedEnd = buffered.end(buffered.length - 1);
+              const pct = Math.min(100, (bufferedEnd / video.duration) * 100);
+              setLoadProgress(pct);
+            }
+          });
+          cleanupHls = () => hls.destroy();
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          // Safari native HLS
+          video.src = src;
+        }
+
+        const onCanPlay = () => setCanPlay(true);
+        video.addEventListener("canplay", onCanPlay);
+
+        // ===== Scroll-to-seek with throttling =====
+        let currentTarget = 0;
+        let seekPending = false;
+
+        const doSeek = (t) => {
+          if (!video.duration) return;
+          if (video.seeking) {
+            seekPending = true;
+            return;
+          }
+          video.currentTime = t;
+        };
+
+        const onSeeked = () => {
+          if (seekPending) {
+            seekPending = false;
+            doSeek(currentTarget);
+          }
+        };
+        video.addEventListener("seeked", onSeeked);
+
+        const st = window.ScrollTrigger.create({
+          trigger: document.documentElement,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: true,
+          onUpdate: (self) => {
+            if (!video.duration) return;
+            currentTarget = self.progress * video.duration;
+            doSeek(currentTarget);
+          },
+        });
+
+        // ===== Mouse parallax on wrapper =====
+        const onMouseMove = (e) => {
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          const moveX = (e.clientX - w / 2) / (w / 2);
+          const moveY = (e.clientY - h / 2) / (h / 2);
+          window.gsap.to(wrapperRef.current, {
+            x: moveX * -30,
+            y: moveY * -30,
+            duration: 1.5,
+            ease: "power2.out",
+          });
+        };
+        window.addEventListener("mousemove", onMouseMove);
+
+        return () => {
+          cleanupHls();
+          window.removeEventListener("mousemove", onMouseMove);
+          video.removeEventListener("canplay", onCanPlay);
+          video.removeEventListener("seeked", onSeeked);
+          st.kill();
+        };
+      }, [src]);
+
+      return (
+        <>
+          {/* Loading overlay */}
+          {!canPlay && (
+            <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+              <div className="text-white text-2xl font-sans">
+                Loading... {Math.round(loadProgress)}%
+              </div>
+            </div>
+          )}
+          {/* Video wrapper (fixed full screen, parallax target) */}
+          <div
+            ref={wrapperRef}
+            className="fixed top-0 left-0 w-full h-full z-0 scale-[1.05] origin-center"
+          >
+            <video
+              ref={videoRef}
+              muted
+              playsInline
+              crossOrigin="anonymous"
+              className={(className || "") + " w-full h-full object-cover scale-[1.35]"}
+            />
+          </div>
+        </>
+      );
+    }
+    window.ScrollVideo = ScrollVideo;
+  </script>
+
+  <!-- =========================================================
+       SCROLL FLOAT — text that scales/fades away as you scroll
+       ========================================================= -->
+  <script type="text/babel">
+    const { useEffect: useEffectSF, useRef: useRefSF } = React;
+
+    function ScrollFloat({ children }) {
+      const containerRef = useRefSF(null);
+
+      useEffectSF(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const chars = el.querySelectorAll(".char");
+        if (!chars.length) return;
+
+        const tween = window.gsap.fromTo(
+          chars,
+          {
+            opacity: 1,
+            yPercent: 0,
+            scaleY: 1,
+            scaleX: 1,
+            transformOrigin: "50% 0%",
+          },
+          {
+            opacity: 0,
+            yPercent: 250,
+            scaleY: 1.2,
+            scaleX: 0.9,
+            ease: "power2.inOut",
+            duration: 1,
+            stagger: 0.05,
+            scrollTrigger: {
+              trigger: document.body,
+              start: "top top",
+              end: "+=1000",
+              scrub: 1.5,
+            },
+          }
+        );
+
+        return () => {
+          if (tween.scrollTrigger) tween.scrollTrigger.kill();
+          tween.kill();
+        };
+      }, [children]);
+
+      const text = typeof children === "string" ? children : String(children);
+      const lines = text.split("\n");
+
+      return (
+        <div
+          ref={containerRef}
+          className="scroll-float-text font-dirtyline text-white"
+          style={{
+            fontSize: "clamp(4rem, 15vw, 317px)",
+            lineHeight: 0.85,
+            letterSpacing: "0%",
+          }}
+        >
+          {lines.map((line, li) => {
+            const words = line.split(" ");
+            return (
+              <span key={li} style={{ display: "block" }}>
+                {words.map((word, wi) => (
+                  <React.Fragment key={wi}>
+                    <span style={{ display: "inline-block", whiteSpace: "nowrap" }}>
+                      {Array.from(word).map((ch, ci) => (
+                        <span key={ci} className="char">{ch}</span>
+                      ))}
+                    </span>
+                    {wi < words.length - 1 && (
+                      <span dangerouslySetInnerHTML={{ __html: "&nbsp;" }} />
+                    )}
+                  </React.Fragment>
+                ))}
+              </span>
+            );
+          })}
+        </div>
+      );
+    }
+    window.ScrollFloat = ScrollFloat;
+  </script>
+
+  <!-- =========================================================
+       GLASS PANEL — slides up at the bottom, 3D mouse parallax
+       ========================================================= -->
+  <script type="text/babel">
+    const { useEffect: useEffectGP, useRef: useRefGP } = React;
+
+    function GlassPanel() {
+      const containerRef = useRefGP(null);
+      const panelRef = useRefGP(null);
+      const innerRef = useRefGP(null);
+
+      useEffectGP(() => {
+        const container = containerRef.current;
+        const panel = panelRef.current;
+        const inner = innerRef.current;
+        if (!container || !panel || !inner) return;
+
+        // Slide-up animation
+        const tween = window.gsap.fromTo(
+          panel,
+          { y: "100%" },
+          {
+            y: "0%",
+            ease: "none",
+            scrollTrigger: {
+              trigger: container,
+              start: "top bottom",
+              end: "bottom bottom",
+              scrub: 1.5,
+            },
+          }
+        );
+
+        // 3D mouse parallax (only when panel area is hovered)
+        const onMouseMove = (e) => {
+          const rect = inner.getBoundingClientRect();
+          if (
+            e.clientX < rect.left ||
+            e.clientX > rect.right ||
+            e.clientY < rect.top ||
+            e.clientY > rect.bottom
+          )
+            return;
+          const moveX = (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
+          const moveY = (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
+          window.gsap.to(inner, {
+            x: moveX * 20,
+            y: moveY * 20,
+            rotationY: moveX * 4,
+            rotationX: -moveY * 4,
+            ease: "power3.out",
+            duration: 1,
+          });
+        };
+        window.addEventListener("mousemove", onMouseMove);
+
+        return () => {
+          if (tween.scrollTrigger) tween.scrollTrigger.kill();
+          tween.kill();
+          window.removeEventListener("mousemove", onMouseMove);
+        };
+      }, []);
+
+      const brands = ["VOICEFLOW", "ZENDESK", "PENDO", "GLIDE", "CANVA"];
+      // For a seamless marquee we need the row width to be exactly half the container,
+      // so we duplicate the brand list 4× and translate -50%.
+      const marqueeRow = [...brands, ...brands, ...brands, ...brands];
+
+      return (
+        <div
+          ref={containerRef}
+          className="absolute bottom-0 left-0 w-full h-screen flex items-end justify-center pointer-events-none z-20"
+        >
+          <div
+            ref={panelRef}
+            className="w-full max-w-[1250px] h-[900px] max-h-[85vh] pointer-events-auto px-4 md:px-8"
+            style={{ perspective: "1000px" }}
+          >
+            <div
+              ref={innerRef}
+              className="w-full h-full flex flex-col justify-between rounded-3xl relative overflow-hidden"
+              style={{
+                backgroundColor: "rgba(0, 0, 0, 0.16)",
+                backdropFilter: "blur(160px)",
+                WebkitBackdropFilter: "blur(160px)",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                transformStyle: "preserve-3d",
+                willChange: "transform",
+              }}
+            >
+              {/* Content */}
+              <div className="flex-1 flex flex-col items-center justify-center px-6 md:px-12 text-center">
+                <p className="font-serif italic text-white/70 text-base md:text-lg mb-4 md:mb-6">
+                  About Us
+                </p>
+                <h2 className="font-serif text-white text-4xl md:text-6xl lg:text-[96px] leading-[1.1] lg:leading-[92.6px] tracking-tight w-full max-w-[1000px] mx-auto">
+                  We transform sterile concrete into thriving{" "}
+                  <span className="italic">urban</span> jungles. Our innovative designs bring wild{" "}
+                  <span className="italic">nature</span> back to modern cities. Experience the{" "}
+                  <span className="italic">bloom</span>
+                </h2>
+              </div>
+
+              {/* Marquee */}
+              <div className="border-t border-white/10 py-6 overflow-hidden">
+                <div
+                  className="flex items-center gap-16 whitespace-nowrap"
+                  style={{ animation: "marquee 20s linear infinite", width: "max-content" }}
+                >
+                  {marqueeRow.map((name, i) => (
+                    <span
+                      key={i}
+                      className="text-white opacity-40 hover:opacity-100 transition-opacity duration-300 uppercase font-sans font-semibold text-sm tracking-widest"
+                    >
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    window.GlassPanel = GlassPanel;
+  </script>
+
+  <!-- =========================================================
+       PILL NAV — fixed top center, liquid-fill hover effect
+       ========================================================= -->
+  <script type="text/babel">
+    const { useEffect: useEffectPN, useRef: useRefPN, useState: useStatePN } = React;
+
+    function Pill({ label, onClick }) {
+      const pillRef = useRefPN(null);
+      const circleRef = useRefPN(null);
+      const stackRef = useRefPN(null);
+      const tlRef = useRefPN(null);
+
+      useEffectPN(() => {
+        const pill = pillRef.current;
+        const circle = circleRef.current;
+        if (!pill || !circle) return;
+
+        const measure = () => {
+          const rect = pill.getBoundingClientRect();
+          const w = rect.width;
+          const h = rect.height;
+          if (!w || !h) return;
+          const R = (w * w / 4 + h * h) / (2 * h);
+          const D = 2 * R + 2;
+          const delta = R - Math.sqrt(R * R - (w * w) / 4) + 1;
+          circle.style.width = D + "px";
+          circle.style.height = D + "px";
+          circle.style.left = "50%";
+          circle.style.bottom = -delta + "px";
+          circle.style.marginLeft = -D / 2 + "px";
+          circle.style.transformOrigin = `50% ${D - delta}px`;
+        };
+        measure();
+        window.addEventListener("resize", measure);
+
+        // Find labels
+        const labels = pill.querySelectorAll(".pill-label, .pill-label-hover");
+        const [labelMain, labelHover] = labels;
+
+        // Initial state
+        window.gsap.set(circle, { scale: 0 });
+        window.gsap.set(labelMain, { y: 0 });
+        window.gsap.set(labelHover, { y: "100%" });
+
+        const tl = window.gsap.timeline({ paused: true });
+        tl.to(circle, { scale: 3, duration: 0.3, ease: "power3.out" }, 0)
+          .to(labelMain, { y: "-100%", duration: 0.3, ease: "power3.out" }, 0)
+          .to(labelHover, { y: 0, duration: 0.3, ease: "power3.out" }, 0);
+        tlRef.current = tl;
+
+        return () => {
+          window.removeEventListener("resize", measure);
+          tl.kill();
+        };
+      }, []);
+
+      const handleEnter = () => {
+        if (tlRef.current) tlRef.current.tweenTo(tlRef.current.duration(), { duration: 0.3 });
+      };
+      const handleLeave = () => {
+        if (tlRef.current) tlRef.current.tweenTo(0, { duration: 0.2 });
+      };
+
+      return (
+        <li>
+          <button
+            ref={pillRef}
+            className="pill"
+            onClick={onClick}
+            onMouseEnter={handleEnter}
+            onMouseLeave={handleLeave}
+          >
+            <span ref={circleRef} className="hover-circle"></span>
+            <span ref={stackRef} className="label-stack">
+              <span className="pill-label">{label}</span>
+              <span className="pill-label-hover">{label}</span>
+            </span>
+          </button>
+        </li>
+      );
+    }
+
+    function PillNav() {
+      const logoRef = useRefPN(null);
+      const itemsRef = useRefPN(null);
+      const svgRef = useRefPN(null);
+      const [mobileOpen, setMobileOpen] = useStatePN(false);
+
+      useEffectPN(() => {
+        if (logoRef.current) {
+          window.gsap.fromTo(
+            logoRef.current,
+            { scale: 0 },
+            { scale: 1, duration: 0.6, ease: "back.out(1.7)" }
+          );
+        }
+        if (itemsRef.current) {
+          window.gsap.fromTo(
+            itemsRef.current,
+            { width: 0 },
+            { width: "auto", duration: 0.6, ease: "power3.out", delay: 0.1 }
+          );
+        }
+      }, []);
+
+      const handleLogoEnter = () => {
+        if (svgRef.current) {
+          window.gsap.to(svgRef.current, { rotate: 360, duration: 0.2 });
+        }
+      };
+      const handleLogoLeave = () => {
+        if (svgRef.current) {
+          window.gsap.set(svgRef.current, { rotate: 0 });
+        }
+      };
+
+      const scrollToTop = () => {
+        window.gsap.to(window, { duration: 3, scrollTo: 0, ease: "power3.inOut" });
+      };
+      const scrollToAbout = () => {
+        window.gsap.to(window, {
+          duration: 3,
+          scrollTo: document.body.scrollHeight,
+          ease: "power3.inOut",
+        });
+      };
+      const noop = (e) => e.preventDefault();
+
+      const LogoSVG = (
+        <svg
+          ref={svgRef}
+          width="24"
+          height="24"
+          viewBox="0 0 100 100"
+          fill="#fff"
+        >
+          <path d="m50,50c0,18.2,14.77,32.98,32.97,32.98,0-18.2-14.77-32.98-32.97-32.98Z" />
+          <path d="m17.02,82.98c18.2,0,32.98-14.77,32.98-32.98-18.2,0-32.98,14.77-32.98,32.98Z" />
+          <path d="m82.98,17.02c-18.2,0-32.97,14.77-32.97,32.97,18.2,0,32.97-14.77,32.97-32.97Z" />
+          <path d="m17.02,17.02c0,18.2,14.77,32.97,32.98,32.97,0-18.2-14.77-32.97-32.98-32.97Z" />
+        </svg>
+      );
+
+      return (
+        <div className="pill-nav-container">
+          <div className="pill-nav">
+            <div
+              ref={logoRef}
+              className="pill-logo"
+              onClick={scrollToTop}
+              onMouseEnter={handleLogoEnter}
+              onMouseLeave={handleLogoLeave}
+            >
+              <span className="logo-svg-container">{LogoSVG}</span>
+            </div>
+
+            {/* Desktop */}
+            <div ref={itemsRef} className="pill-nav-items desktop-only">
+              <ul className="pill-list">
+                <Pill label="Home" onClick={scrollToTop} />
+                <Pill label="About" onClick={scrollToAbout} />
+                <Pill label="Services" onClick={noop} />
+                <Pill label="Contact" onClick={noop} />
+              </ul>
+            </div>
+
+            {/* Mobile */}
+            <div className="mobile-only" style={{ position: "relative" }}>
+              <button
+                className="mobile-menu-button"
+                aria-label="Toggle menu"
+                onClick={() => setMobileOpen((o) => !o)}
+              >
+                <span
+                  className="hamburger-line"
+                  style={{
+                    transform: mobileOpen ? "rotate(45deg) translateY(3px)" : "none",
+                  }}
+                ></span>
+                <span
+                  className="hamburger-line"
+                  style={{
+                    transform: mobileOpen ? "rotate(-45deg) translateY(-3px)" : "none",
+                  }}
+                ></span>
+              </button>
+              <div className={"mobile-menu-popover" + (mobileOpen ? " open" : "")}>
+                <ul className="mobile-menu-list">
+                  <li>
+                    <a className="mobile-menu-link" onClick={(e) => { e.preventDefault(); setMobileOpen(false); scrollToTop(); }}>Home</a>
+                  </li>
+                  <li>
+                    <a className="mobile-menu-link" onClick={(e) => { e.preventDefault(); setMobileOpen(false); scrollToAbout(); }}>About</a>
+                  </li>
+                  <li>
+                    <a className="mobile-menu-link" onClick={noop}>Services</a>
+                  </li>
+                  <li>
+                    <a className="mobile-menu-link" onClick={noop}>Contact</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    window.PillNav = PillNav;
+  </script>
+
+  <!-- =========================================================
+       APP
+       ========================================================= -->
+  <script type="text/babel">
+    function App() {
+      React.useEffect(() => {
+        if (window.gsap && window.ScrollTrigger && !window.gsap.core?._plugins?.scrollTrigger) {
+          window.gsap.registerPlugin(window.ScrollTrigger, window.ScrollToPlugin);
+        } else if (window.gsap && window.ScrollTrigger) {
+          window.gsap.registerPlugin(window.ScrollTrigger, window.ScrollToPlugin);
+        }
+      }, []);
+
+      return (
+        <>
+          <window.ScrollVideo src="https://stream.mux.com/43NlHXsaMrmyzWamMk87m01fNyxSTekAD669BBAPBNm00.m3u8" />
+          <window.PillNav />
+          <div style={{ position: "relative", height: "500vh" }}>
+            <div className="fixed inset-0 flex flex-col justify-end p-4 md:p-8 pointer-events-none z-10">
+              <window.ScrollFloat>{`Unleash The\nFull Power`}</window.ScrollFloat>
+            </div>
+            <window.GlassPanel />
+          </div>
+        </>
+      );
+    }
+
+    // Register GSAP plugins before mount
+    if (window.gsap && window.ScrollTrigger && window.ScrollToPlugin) {
+      window.gsap.registerPlugin(window.ScrollTrigger, window.ScrollToPlugin);
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>

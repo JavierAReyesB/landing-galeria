@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catálogo · Plantillas para webs</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            heading: ["'Instrument Serif'", "serif"],
+            body: ["'Barlow'", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    html, body { background: #0a0a0a; color: #fff; font-family: 'Barlow', sans-serif; }
+
+    /* Liquid glass card (subtle) */
+    .glass {
+      background: rgba(255,255,255,0.02);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.08);
+      position: relative;
+      overflow: hidden;
+      border-radius: 1.25rem;
+    }
+    .glass::before {
+      content: "";
+      position: absolute; inset: 0;
+      border-radius: inherit;
+      padding: 1.2px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.35) 0%,
+        rgba(255,255,255,0.08) 25%,
+        rgba(255,255,255,0) 50%,
+        rgba(255,255,255,0.08) 75%,
+        rgba(255,255,255,0.35) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* Background grid + radial glow */
+    .bg-grid {
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120,80,255,0.18), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 120%, rgba(80,160,255,0.12), transparent 60%),
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: auto, auto, 40px 40px, 40px 40px;
+      background-position: 0 0, 0 0, -1px -1px, -1px -1px;
+    }
+
+    /* Preview placeholder */
+    .preview-fallback {
+      background:
+        radial-gradient(ellipse at 50% 60%, rgba(255,180,80,0.25), transparent 50%),
+        radial-gradient(ellipse at 30% 30%, rgba(120,80,255,0.2), transparent 50%),
+        #0a0a0a;
+    }
+
+    /* Live iframe preview — image visible by default, iframe overlay on card hover */
+    .preview-stage {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    .preview-stage .preview-image {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+      transition: transform .7s ease;
+    }
+    .group:hover .preview-stage .preview-image {
+      transform: scale(1.04);
+    }
+    /* The iframe sits on top of the image, hidden by default, shown on card hover */
+    .preview-stage iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1440px;
+      height: 1080px;
+      border: 0;
+      pointer-events: none;
+      transform-origin: top left;
+      opacity: 0;
+      transition: opacity .45s ease;
+      z-index: 2;
+    }
+    /* Only show iframe when it's loaded AND the card is hovered */
+    .group:hover .preview-stage iframe.ready {
+      opacity: 1;
+    }
+
+    /* "EN VIVO" pill — only shows when card hovered AND iframe ready */
+    .preview-stage .live-pulse {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 5;
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #fff;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(8px);
+      border-radius: 9999px;
+      border: 1px solid rgba(255,255,255,0.1);
+      opacity: 0;
+      transition: opacity .35s ease;
+    }
+    .group:hover .preview-stage.iframe-ready .live-pulse {
+      opacity: 1;
+    }
+    .preview-stage .live-pulse::before {
+      content: "";
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #34d399;
+      box-shadow: 0 0 8px #34d399;
+      animation: livepulse 1.6s ease-in-out infinite;
+    }
+    /* Subtle "hover me to see it live" hint that fades out when iframe is ready */
+    .preview-stage .hover-hint {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      padding: 4px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(8px);
+      border-radius: 9999px;
+      border: 1px solid rgba(255,255,255,0.1);
+      opacity: 0;
+      transition: opacity .3s ease;
+      pointer-events: none;
+    }
+    /* Hint visible when card hovered but iframe NOT ready yet (loading state) */
+    .group:hover .preview-stage:not(.iframe-ready) .hover-hint {
+      opacity: 1;
+    }
+    @keyframes livepulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(120%);
+      transition: transform .35s cubic-bezier(.22,1,.36,1), opacity .25s;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Button press feedback */
+    .btn-press:active { transform: scale(0.97); }
+
+    /* Pill tag */
+    .tag {
+      display: inline-flex; align-items: center;
+      padding: 0.25rem 0.625rem;
+      font-size: 11px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 9999px;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body class="bg-grid min-h-screen">
+
+  <!-- ============== HEADER ============== -->
+  <header class="px-6 md:px-12 lg:px-20 pt-12 pb-8 max-w-7xl mx-auto">
+    <div class="flex items-start justify-between gap-6 flex-wrap">
+      <div>
+        <div class="text-xs uppercase tracking-[0.2em] text-white/50 mb-3 font-medium">
+          // Catálogo
+        </div>
+        <h1 class="font-heading italic text-5xl md:text-6xl lg:text-7xl leading-[0.9] tracking-tight">
+          Plantillas <br/>para webs
+        </h1>
+        <p class="mt-5 max-w-xl text-white/70 font-light">
+          Mi colección de templates con preview e <span class="italic">index.html</span> listo para copiar.
+          Pulsa <span class="font-semibold text-white">Copiar código</span> en cualquier card y pégalo donde lo necesites.
+        </p>
+      </div>
+
+      <div class="glass px-5 py-3 flex items-center gap-3 mt-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-sm text-white/80" id="count-label">— plantillas</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============== GRID ============== -->
+  <main class="px-6 md:px-12 lg:px-20 pb-24 max-w-7xl mx-auto">
+    <div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </main>
+
+  <!-- ============== FOOTER NOTE ============== -->
+  <footer class="px-6 md:px-12 lg:px-20 pb-10 max-w-7xl mx-auto text-xs text-white/40">
+    <p>
+      💡 Si el botón "Copiar código" no funciona, este catálogo necesita un servidor local
+      (abrir con doble clic <span class="text-white/60">file://</span> bloquea el fetch).
+      Ejecuta <code class="text-white/70 bg-white/10 px-1.5 py-0.5 rounded">npx serve .</code> en esta carpeta
+      y abre <code class="text-white/70 bg-white/10 px-1.5 py-0.5 rounded">http://localhost:3000</code>.
+    </p>
+  </footer>
+
+  <!-- ============== TOAST ============== -->
+  <div id="toast" class="toast glass px-5 py-3 flex items-center gap-3 text-sm">
+    <svg class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    <span id="toast-msg">Copiado al portapapeles</span>
+  </div>
+
+  <!-- ============== DATA + LOGIC ============== -->
+  <script src="templates.js"></script>
+  <script>
+    const TEMPLATES = window.TEMPLATES;
+
+    // ───── Render ─────
+    const grid = document.getElementById("grid");
+    const countLabel = document.getElementById("count-label");
+    countLabel.textContent = `${TEMPLATES.length} plantilla${TEMPLATES.length === 1 ? "" : "s"}`;
+
+    function cardHTML(t, idx) {
+      const tags = t.tags.map(x => `<span class="tag">${x}</span>`).join("");
+      return `
+        <article class="glass flex flex-col overflow-hidden group" data-id="${t.id}">
+          <!-- Preview (live iframe + image fallback) -->
+          <div class="relative aspect-[4/3] overflow-hidden border-b border-white/5">
+            <div class="preview-stage" data-stage data-src="${t.path}">
+              <!-- Static image — siempre visible salvo cuando se hace hover y el iframe está listo -->
+              <img
+                src="${t.preview}"
+                alt="${t.name} preview"
+                class="preview-image"
+                onerror="this.style.display='none'"
+              />
+              <!-- "EN VIVO" pill (solo al hover cuando iframe está listo) -->
+              <div class="live-pulse">EN VIVO</div>
+              <!-- Hint mientras el iframe carga -->
+              <div class="hover-hint">Cargando live preview…</div>
+              <!-- iframe se inyecta por JS al primer hover de la card -->
+            </div>
+
+            <!-- Number badge -->
+            <div class="absolute top-3 right-3 glass px-2.5 py-1 text-[11px] font-medium font-body z-10">
+              #${String(idx + 1).padStart(2, "0")} · ${t.section}
+            </div>
+
+            <!-- Hover overlay invitando a "Ver demo" -->
+            <a
+              href="viewer?t=${t.id}"
+              target="_blank"
+              rel="noopener"
+              class="absolute inset-0 z-10 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              style="background: linear-gradient(to top, rgba(0,0,0,0.65), transparent 50%);"
+              title="Abrir demo en vivo a pantalla completa"
+            >
+              <span class="bg-white text-black rounded-full px-4 py-2 text-xs font-semibold inline-flex items-center gap-1.5">
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M7 17L17 7"/><path d="M7 7h10v10"/>
+                </svg>
+                Abrir a pantalla completa
+              </span>
+            </a>
+          </div>
+
+          <!-- Body -->
+          <div class="flex flex-col flex-1 p-5">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-white/45 mb-2 font-medium">
+              ${t.type}
+            </div>
+            <h3 class="font-heading italic text-3xl leading-none tracking-tight mb-3">
+              ${t.name}
+            </h3>
+            <p class="text-sm text-white/65 font-light leading-snug mb-4 flex-1">
+              ${t.description}
+            </p>
+
+            <div class="flex flex-wrap gap-1.5 mb-5">${tags}</div>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-2 mt-auto">
+              <button
+                data-copy="${t.path}"
+                data-name="${t.name}"
+                class="btn-press flex-1 inline-flex items-center justify-center gap-2 bg-white text-black rounded-full px-4 py-2.5 text-sm font-semibold hover:bg-white/90 transition-colors"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span class="copy-label">Copiar código</span>
+              </button>
+
+              <a
+                href="viewer?t=${t.id}"
+                target="_blank"
+                rel="noopener"
+                class="btn-press inline-flex items-center justify-center gap-2 glass px-4 py-2.5 text-sm font-medium hover:bg-white/5 transition-colors"
+                title="Abrir demo en vivo (con barra superior y atajos)"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 1 0 9-9"/>
+                  <path d="M3 4v5h5"/>
+                </svg>
+                Demo
+              </a>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    grid.innerHTML = TEMPLATES.map(cardHTML).join("");
+
+    // ───── Copy logic ─────
+    const toast = document.getElementById("toast");
+    const toastMsg = document.getElementById("toast-msg");
+    let toastTimer = null;
+
+    function showToast(msg, isError = false) {
+      toastMsg.textContent = msg;
+      toast.classList.toggle("text-red-300", isError);
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+
+    async function copyTemplate(path, name, btn) {
+      const label = btn.querySelector(".copy-label");
+      const original = label.textContent;
+      label.textContent = "Copiando…";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(path);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const code = await res.text();
+        await navigator.clipboard.writeText(code);
+        label.textContent = "¡Copiado!";
+        showToast(`Código de "${name}" copiado (${(code.length / 1024).toFixed(1)} KB)`);
+      } catch (err) {
+        console.error(err);
+        label.textContent = "Error";
+        const isFileProtocol = location.protocol === "file:";
+        showToast(
+          isFileProtocol
+            ? "Abre el catálogo con un servidor local (npx serve .)"
+            : `No se pudo leer ${path}`,
+          true
+        );
+      } finally {
+        setTimeout(() => {
+          label.textContent = original;
+          btn.disabled = false;
+        }, 1600);
+      }
+    }
+
+    grid.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-copy]");
+      if (!btn) return;
+      copyTemplate(btn.dataset.copy, btn.dataset.name, btn);
+    });
+
+    // ───── Live preview iframes ─────
+    // Strategy:
+    //   - Cada card muestra siempre la preview.png como fondo.
+    //   - Al primer hover de la card, inyectamos un <iframe> con la plantilla
+    //     renderizada a 1440×1080 (virtual desktop) escalada al tamaño de la card.
+    //   - Cuando el iframe termina de cargar Y se le da tiempo a renderizar React,
+    //     marcamos la stage como "iframe-ready" → el CSS lo hace visible al hover.
+    //   - ResizeObserver mantiene el escalado correcto al redimensionar.
+    const VIRTUAL_W = 1440;
+    const VIRTUAL_H = 1080;
+    // Tiempo extra después del onload para que React/Babel terminen el primer render.
+    // Sin este delay el iframe muestra el HTML pelado (negro) durante 1-2 segundos.
+    const FIRST_PAINT_DELAY = 1200;
+
+    function fitIframe(stage, iframe) {
+      const w = stage.clientWidth;
+      const h = stage.clientHeight;
+      if (!w || !h) return;
+      // Card es 4:3, canvas virtual también 4:3 → scale W y H coinciden.
+      const scale = Math.max(w / VIRTUAL_W, h / VIRTUAL_H);
+      iframe.style.transform = `scale(${scale})`;
+    }
+
+    function activateStage(stage) {
+      if (stage.dataset.activated === "1") return;
+      stage.dataset.activated = "1";
+
+      const src = stage.dataset.src;
+      const iframe = document.createElement("iframe");
+      iframe.setAttribute("title", "Live preview");
+      iframe.setAttribute(
+        "sandbox",
+        "allow-scripts allow-same-origin allow-popups allow-forms"
+      );
+      iframe.addEventListener("load", () => {
+        // Damos margen para que React/Babel ejecuten el primer render antes de
+        // marcar como "ready". Si no, el iframe aparece negro al primer hover.
+        setTimeout(() => {
+          iframe.classList.add("ready");
+          stage.classList.add("iframe-ready");
+        }, FIRST_PAINT_DELAY);
+      });
+      iframe.src = src;
+      stage.appendChild(iframe);
+
+      // Escalado inicial + observador de resize
+      requestAnimationFrame(() => fitIframe(stage, iframe));
+      const ro = new ResizeObserver(() => fitIframe(stage, iframe));
+      ro.observe(stage);
+    }
+
+    // En lugar de cargar todos los iframes en intersección, los cargamos al
+    // primer hover de la card. Cards no tocadas no consumen recursos.
+    grid.querySelectorAll("[data-stage]").forEach((stage) => {
+      const card = stage.closest("article");
+      const handler = () => {
+        activateStage(stage);
+        card.removeEventListener("mouseenter", handler);
+      };
+      card.addEventListener("mouseenter", handler, { once: true });
+    });
+  </script>
+</body>
+</html>

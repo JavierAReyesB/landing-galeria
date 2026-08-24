@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wild Daisy Fragrances</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01/02/03) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <style>
+    html, body { background: #fff; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useRef, useState } = React;
+
+    // ───── Global constants ─────
+    const TEXT_COLOR = '#000000';
+    const HERO_TEXT  = '#332023';
+    const BG_BLUE    = '#4BB3ED';
+    const BG_LIME    = '#BDE84F';
+    const EASE       = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+    // ───── Asset URLs ─────
+    const HERO_VIDEO  = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260511_142713_322c5ac5-8a5d-413b-be68-4a0e82014264.mp4';
+    const SCENT_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260511_151802_1bbf9a81-a7cb-4be1-b858-f1cd92b62b96.mp4';
+    const WILD_VIDEO  = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260511_151818_65bb22c5-33ae-4e23-85ea-0a3dd89957c2.mp4';
+
+    const HERO_IMG  = 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260511_143221_81001e13-b71c-4a90-b2d7-abf4e2ec08ff.png&w=1280&q=85';
+    const SCENT_IMG = 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260511_151640_5b4a7bf8-4eb2-4a49-aa63-17a9bb642b88.png&w=1280&q=85';
+    const WILD_IMG  = 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260511_151621_4fba6892-ed21-4c2e-8cb3-0bd2ec2abefa.png&w=1280&q=85';
+
+    // ───── Product data ─────
+    const PRODUCT = { name: 'Eau So Fresh', size: '100 ml / 3.4 oz', image: HERO_IMG };
+
+    const SCENT_PRODUCT = {
+      name: 'Eau So Sweet',
+      size: '100 ml / 3.3 oz',
+      image: SCENT_IMG,
+      notes: [
+        { label: 'Fruity top',   ingredient: 'WHITE RASPBERRIES' },
+        { label: 'Floral heart', ingredient: 'DAISY TREE PETALS' },
+        { label: 'Feminine base', ingredient: 'SUGAR MUSKS' },
+      ],
+    };
+
+    const WILD_PRODUCT = {
+      name: 'Eau So Extra',
+      size: '100 ml / 3.3 oz',
+      image: WILD_IMG,
+      notes: [
+        { label: 'Top',   ingredient: 'BANANA BLOSSOM ACCORD' },
+        { label: 'Heart', ingredient: 'CHOCOLATE DAISY ACCORD' },
+        { label: 'Base',  ingredient: 'VETIVER OIL' },
+      ],
+    };
+
+    // ───── Animation helper ─────
+    function anim(visible, delay, opts) {
+      opts = opts || {};
+      const y = opts.y != null ? opts.y : 20;
+      const x = opts.x != null ? opts.x : 0;
+      const duration = opts.duration != null ? opts.duration : 1600;
+      const translateFrom = y !== 0 ? `translateY(${y}px)` : x !== 0 ? `translateX(${x}px)` : 'none';
+      return {
+        style: {
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'translate(0,0)' : translateFrom,
+          transition: `opacity ${duration}ms ${EASE} ${delay}ms, transform ${duration}ms ${EASE} ${delay}ms`,
+        },
+      };
+    }
+
+    // ═════════════════════════ SECTION 1 — HERO ═════════════════════════
+    function Hero({ v, heroRef }) {
+      return (
+        <section
+          ref={heroRef}
+          className="relative w-full min-h-screen flex flex-col justify-end overflow-hidden"
+        >
+          {/* 1a. Background video */}
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ zIndex: 0 }}
+            ref={(el) => { if (el) el.playbackRate = 1; }}
+          >
+            <source src={HERO_VIDEO} type="video/mp4" />
+          </video>
+
+          {/* 1b. Header nav */}
+          <header
+            className="absolute top-0 left-0 w-full flex items-center justify-between px-5 sm:px-8 py-5 sm:py-6"
+            style={{ zIndex: 40, ...anim(v, 100, { y: -10, duration: 1400 }).style }}
+          >
+            <div
+              className="font-black text-xs sm:text-sm tracking-widest leading-tight uppercase"
+              style={{ color: HERO_TEXT }}
+            >
+              <div>Wild Daisy</div>
+              <div>Fragrances</div>
+            </div>
+            <nav className="flex gap-5 sm:gap-8">
+              {['Shop Now', 'Cart'].map((label) => (
+                <a
+                  key={label}
+                  href="#"
+                  className="text-xs font-bold tracking-widest uppercase relative group"
+                  style={{ color: HERO_TEXT }}
+                >
+                  <span>{label}</span>
+                  <span
+                    className="absolute -bottom-0.5 left-0 h-px w-full origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"
+                    style={{ backgroundColor: HERO_TEXT }}
+                  />
+                </a>
+              ))}
+            </nav>
+          </header>
+
+          {/* 1c. Scroll indicator (desktop) */}
+          <div
+            className="hidden sm:block absolute right-8 md:right-10"
+            style={{
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 20,
+              ...anim(v, 1000, { x: 16, duration: 1600 }).style,
+            }}
+          >
+            <span
+              className="text-xl tracking-widest"
+              style={{ fontFamily: 'Georgia, serif', fontStyle: 'italic', color: HERO_TEXT }}
+            >
+              Scroll
+            </span>
+          </div>
+
+          {/* 1d. Floating product card (desktop) */}
+          <div
+            className="hidden sm:flex absolute bottom-10 right-10 rounded-2xl items-center gap-2 px-5 py-4"
+            style={{
+              zIndex: 30,
+              minWidth: 260,
+              backgroundColor: '#ffffff',
+              boxShadow: '0 4px 24px rgba(51,32,35,0.08), 0 1px 4px rgba(51,32,35,0.06)',
+              ...anim(v, 1300, { y: 20, duration: 1400 }).style,
+            }}
+          >
+            <div
+              className="flex-shrink-0 overflow-hidden"
+              style={{ width: 60, height: 76, borderRadius: 8 }}
+            >
+              <img
+                src={PRODUCT.image}
+                alt={PRODUCT.name}
+                style={{
+                  width: '130%',
+                  height: '130%',
+                  objectFit: 'contain',
+                  display: 'block',
+                  marginLeft: '-15%',
+                  marginTop: '-15%',
+                }}
+              />
+            </div>
+            <div className="flex flex-col">
+              <span
+                className="text-sm font-semibold tracking-wide leading-tight"
+                style={{ color: HERO_TEXT }}
+              >
+                Eau So Fresh
+              </span>
+              <span
+                className="tracking-wide"
+                style={{ fontSize: 11, fontWeight: 500, marginTop: 3, color: HERO_TEXT }}
+              >
+                100 ml / 3.4 oz
+              </span>
+              <button
+                className="text-xs font-bold tracking-widest uppercase self-start leading-tight relative overflow-hidden group"
+                style={{ marginTop: 14, color: HERO_TEXT }}
+              >
+                <span className="relative z-10">Add to Cart</span>
+                <span
+                  className="absolute bottom-0 left-0 h-px w-full origin-left transition-transform duration-300 ease-out scale-x-100 group-hover:scale-x-0"
+                  style={{ backgroundColor: HERO_TEXT }}
+                />
+                <span
+                  className="absolute bottom-0 left-0 h-px w-full origin-right transition-transform duration-300 ease-out delay-150 scale-x-0 group-hover:scale-x-100"
+                  style={{ backgroundColor: HERO_TEXT, opacity: 0.4 }}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* 1e. Slide index "01" (desktop) */}
+          <div
+            className="hidden sm:block absolute left-6 md:left-8"
+            style={{
+              top: '50%',
+              transform: v
+                ? 'translateY(-50%) translateX(0)'
+                : 'translateY(-50%) translateX(-24px)',
+              fontFamily:
+                '"Playfair Display", "Didot", "Bodoni MT", "Times New Roman", serif',
+              fontStyle: 'italic',
+              fontWeight: 400,
+              fontSize: 'clamp(2.5rem, 6.5vw, 6rem)',
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
+              zIndex: 10,
+              color: HERO_TEXT,
+              opacity: v ? 1 : 0,
+              transition: `opacity 1600ms ${EASE} 500ms, transform 1600ms ${EASE} 500ms`,
+            }}
+          >
+            01
+          </div>
+
+          {/* 1f. Title + mobile card wrapper */}
+          <div
+            className="relative pb-0 sm:pb-12 pl-5 sm:pl-8 pr-0 sm:pr-8"
+            style={{ zIndex: 10 }}
+          >
+            <h1
+              className="font-medium uppercase leading-tight sm:leading-none"
+              style={{ fontSize: 'clamp(2.2rem, 8vw, 4rem)', letterSpacing: '-0.01em' }}
+            >
+              {/* Mobile */}
+              <span
+                className="block sm:hidden"
+                style={{
+                  color: '#ffffff',
+                  textShadow: '0 2px 16px rgba(0,0,0,0.4)',
+                  ...anim(v, 600, { y: 24, duration: 1600 }).style,
+                }}
+              >
+                Sweet Daisy
+              </span>
+              <span
+                className="block sm:hidden"
+                style={{
+                  color: 'rgba(255,255,255,0.8)',
+                  textShadow: '0 2px 12px rgba(0,0,0,0.35)',
+                  ...anim(v, 800, { y: 24, duration: 1600 }).style,
+                }}
+              >
+                Personal Scent
+              </span>
+              <span
+                className="block sm:hidden"
+                style={{
+                  color: 'rgba(255,255,255,0.8)',
+                  textShadow: '0 2px 12px rgba(0,0,0,0.35)',
+                  ...anim(v, 1000, { y: 24, duration: 1600 }).style,
+                }}
+              >
+                Finder
+              </span>
+
+              {/* Desktop */}
+              <span
+                className="hidden sm:block"
+                style={{ color: HERO_TEXT, ...anim(v, 600, { y: 20, duration: 1600 }).style }}
+              >
+                Sweet Daisy
+              </span>
+              <span
+                className="hidden sm:block"
+                style={{ color: '#B0A2A1', ...anim(v, 800, { y: 20, duration: 1600 }).style }}
+              >
+                Personal Scent
+              </span>
+              <span
+                className="hidden sm:block"
+                style={{ color: '#B0A2A1', ...anim(v, 1000, { y: 20, duration: 1600 }).style }}
+              >
+                Finder
+              </span>
+            </h1>
+
+            {/* 1g. Mobile inline product card */}
+            <div
+              className="sm:hidden flex items-center gap-3 mt-4 mr-5 mb-8 px-4 py-4 rounded-2xl"
+              style={{
+                backgroundColor: '#ffffff',
+                boxShadow:
+                  '0 4px 24px rgba(51,32,35,0.08), 0 1px 4px rgba(51,32,35,0.06)',
+                ...anim(v, 1300, { y: 20, duration: 1400 }).style,
+              }}
+            >
+              <div
+                className="flex-shrink-0 overflow-hidden"
+                style={{ width: 56, height: 70, borderRadius: 6 }}
+              >
+                <img
+                  src={PRODUCT.image}
+                  alt={PRODUCT.name}
+                  style={{
+                    width: '130%',
+                    height: '130%',
+                    objectFit: 'contain',
+                    display: 'block',
+                    marginLeft: '-15%',
+                    marginTop: '-15%',
+                  }}
+                />
+              </div>
+              <div className="flex flex-col flex-1">
+                <span
+                  className="text-sm font-semibold tracking-wide leading-tight"
+                  style={{ color: HERO_TEXT }}
+                >
+                  Eau So Fresh
+                </span>
+                <span
+                  className="tracking-wide"
+                  style={{ fontSize: 11, fontWeight: 500, marginTop: 3, color: HERO_TEXT }}
+                >
+                  100 ml / 3.4 oz
+                </span>
+                <button
+                  className="text-xs font-bold tracking-widest uppercase self-start leading-tight relative overflow-hidden group"
+                  style={{ marginTop: 12, color: HERO_TEXT }}
+                >
+                  <span className="relative z-10">Add to Cart</span>
+                  <span
+                    className="absolute bottom-0 left-0 h-px w-full origin-left transition-transform duration-300 ease-out scale-x-100 group-hover:scale-x-0"
+                    style={{ backgroundColor: HERO_TEXT }}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // ═══════════════════════ Reusable ProductPanel ═══════════════════════
+    function ProductPanel({ bg, product, notes, visible, noteStyle }) {
+      const isBold = noteStyle === 'bold';
+      return (
+        <div
+          className="relative flex flex-col px-6 md:px-8 pt-6 md:pt-8 pb-8 md:pb-10"
+          style={{ backgroundColor: bg, minHeight: '100%' }}
+        >
+          {/* Top labels */}
+          <div
+            className="flex items-start justify-between mb-auto"
+            {...anim(visible, 0, { y: 12, duration: 1400 })}
+          >
+            <span className="text-xs font-normal" style={{ color: TEXT_COLOR }}>
+              {isBold ? 'Daisy wild' : 'Daisy love'}
+            </span>
+            <span className="text-xs font-normal" style={{ color: TEXT_COLOR }}>
+              {isBold ? 'Playful' : 'Sweet'}
+            </span>
+          </div>
+
+          {/* Product image block */}
+          <div
+            className="flex flex-col items-center py-8"
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              ...anim(visible, 300, { y: 40, duration: 1800 }).style,
+            }}
+          >
+            <div
+              className="overflow-hidden"
+              style={{
+                width: 'clamp(140px, 40%, 220px)',
+                aspectRatio: '220/340',
+                backgroundColor: '#D9D9D9',
+                borderRadius: 2,
+                flexShrink: 0,
+              }}
+            >
+              <img
+                src={product.image}
+                alt={product.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </div>
+            <div
+              className="text-center mt-4"
+              {...anim(visible, 600, { y: 10, duration: 1400 })}
+            >
+              <p className="text-sm font-normal" style={{ color: TEXT_COLOR }}>
+                {product.name}
+              </p>
+              <p className="text-xs font-normal mt-1" style={{ color: TEXT_COLOR }}>
+                {product.size}
+              </p>
+            </div>
+          </div>
+
+          {/* Bottom row */}
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            <div
+              className="flex flex-col gap-0.5"
+              {...anim(visible, 900, { y: 16, duration: 1400 })}
+            >
+              {notes.map((n) => (
+                <React.Fragment key={n.ingredient}>
+                  <p
+                    className="text-xs leading-snug"
+                    style={{ color: TEXT_COLOR, fontWeight: isBold ? 700 : 400 }}
+                  >
+                    {n.label}
+                  </p>
+                  <p
+                    className="text-xs font-bold tracking-widest uppercase leading-snug"
+                    style={{ color: TEXT_COLOR }}
+                  >
+                    {n.ingredient}
+                  </p>
+                </React.Fragment>
+              ))}
+            </div>
+            <button
+              className="text-xs font-bold tracking-widest uppercase border px-6 py-3 relative group shrink-0 overflow-hidden"
+              style={{
+                color: TEXT_COLOR,
+                borderColor: TEXT_COLOR,
+                backgroundColor: 'transparent',
+                ...anim(visible, 1150, { y: 16, duration: 1400 }).style,
+              }}
+            >
+              <span className="relative z-10 group-hover:text-black transition-colors duration-500">
+                SHOP NOW
+              </span>
+              <span
+                className="absolute inset-0 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500 ease-out"
+                style={{ backgroundColor: '#ffffff' }}
+              />
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Hook: enter-once intersection observer
+    function useEnterOnce(threshold) {
+      const ref = useRef(null);
+      const [visible, setVisible] = useState(false);
+      useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) {
+                setVisible(true);
+                io.disconnect();
+              }
+            });
+          },
+          { threshold: threshold }
+        );
+        io.observe(el);
+        return () => io.disconnect();
+      }, []);
+      return [ref, visible];
+    }
+
+    // ═════════════════════ SECTION 2 — ScentFinder ═════════════════════
+    function ScentFinderSection() {
+      const [ref, visible] = useEnterOnce(0.15);
+      return (
+        <section ref={ref} className="relative w-full">
+          <div
+            className="flex flex-col md:grid md:min-h-screen"
+            style={{ gridTemplateColumns: '1fr 1fr' }}
+          >
+            <ProductPanel
+              bg={BG_BLUE}
+              product={SCENT_PRODUCT}
+              notes={SCENT_PRODUCT.notes}
+              visible={visible}
+            />
+            <div
+              className="hidden md:block relative overflow-hidden"
+              style={{ backgroundColor: '#111', minHeight: '100%' }}
+            >
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+              >
+                <source src={SCENT_VIDEO} type="video/mp4" />
+              </video>
+            </div>
+            <div
+              className="md:hidden relative overflow-hidden"
+              style={{ height: '75vw', backgroundColor: '#111' }}
+            >
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+              >
+                <source src={SCENT_VIDEO} type="video/mp4" />
+              </video>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // ═════════════════════ SECTION 3 — WildScent ═════════════════════
+    function WildScentSection() {
+      const [ref, visible] = useEnterOnce(0.15);
+      return (
+        <section ref={ref} className="relative w-full">
+          <div
+            className="flex flex-col-reverse md:grid md:min-h-screen"
+            style={{ gridTemplateColumns: '1fr 1fr' }}
+          >
+            <div
+              className="hidden md:block relative overflow-hidden"
+              style={{ backgroundColor: '#111', minHeight: '100%' }}
+            >
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+              >
+                <source src={WILD_VIDEO} type="video/mp4" />
+              </video>
+            </div>
+            <div
+              className="md:hidden relative overflow-hidden"
+              style={{ height: '75vw', backgroundColor: '#111' }}
+            >
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+              >
+                <source src={WILD_VIDEO} type="video/mp4" />
+              </video>
+            </div>
+            <ProductPanel
+              bg={BG_LIME}
+              product={WILD_PRODUCT}
+              notes={WILD_PRODUCT.notes}
+              visible={visible}
+              noteStyle="bold"
+            />
+          </div>
+        </section>
+      );
+    }
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      const heroRef = useRef(null);
+      const [v, setV] = useState(false);
+
+      useEffect(() => {
+        const t = setTimeout(() => setV(true), 200);
+        return () => clearTimeout(t);
+      }, []);
+
+      return (
+        <div className="min-h-screen" style={{ backgroundColor: '#fff' }}>
+          <Hero v={v} heroRef={heroRef} />
+          <ScentFinderSection />
+          <WildScentSection />
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

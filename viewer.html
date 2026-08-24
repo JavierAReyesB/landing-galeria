@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Viewer · Plantillas para webs</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    html, body { margin: 0; padding: 0; background: #0a0a0a; color: #fff; font-family: 'Barlow', sans-serif; height: 100%; overflow: hidden; }
+
+    .topbar {
+      height: 56px;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 12px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .frame-wrap {
+      position: absolute;
+      top: 56px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #000;
+    }
+    .frame-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+      transition: background-color .2s, transform .12s;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .btn:hover { background: rgba(255,255,255,0.1); }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: #fff; color: #000; border-color: #fff; }
+    .btn-primary:hover { background: rgba(255,255,255,0.9); }
+
+    .breadcrumb {
+      display: flex; align-items: center; gap: 10px;
+      flex: 1; min-width: 0;
+      padding-left: 6px;
+    }
+    .breadcrumb a {
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color .15s;
+    }
+    .breadcrumb a:hover { color: #fff; }
+    .breadcrumb .sep { color: rgba(255,255,255,0.25); font-size: 11px; }
+    .breadcrumb .name {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      color: #fff;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .toast {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: rgba(10,10,10,0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 9999px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s, transform .35s cubic-bezier(.22,1,.36,1);
+      z-index: 100;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .not-found {
+      position: absolute; inset: 56px 0 0 0;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px;
+      text-align: center;
+      padding: 40px;
+    }
+    .not-found h1 {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: 48px;
+      line-height: 1;
+    }
+    .not-found p { color: rgba(255,255,255,0.6); max-width: 480px; }
+  </style>
+</head>
+
+<body>
+  <!-- ===== Top bar ===== -->
+  <header class="topbar">
+    <a href="index.html" class="btn" title="Volver al catálogo">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m15 18-6-6 6-6"/>
+      </svg>
+      Catálogo
+    </a>
+
+    <div class="breadcrumb">
+      <span class="sep">/</span>
+      <a href="index.html">Plantillas</a>
+      <span class="sep">/</span>
+      <span class="name" id="t-name">Cargando…</span>
+      <span class="sep" id="t-section-sep" style="display:none">·</span>
+      <a href="#" id="t-section" style="display:none"></a>
+    </div>
+
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button id="copy-btn" class="btn btn-primary" title="Copiar el index.html de esta plantilla">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        <span id="copy-label">Copiar código</span>
+      </button>
+      <a id="raw-link" class="btn" target="_blank" rel="noopener" href="#" title="Abrir la plantilla sin esta barra">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 17L17 7"/>
+          <path d="M7 7h10v10"/>
+        </svg>
+        Sin marco
+      </a>
+    </div>
+  </header>
+
+  <!-- ===== Iframe with the template ===== -->
+  <div class="frame-wrap">
+    <iframe id="frame" title="Plantilla en vivo" allow="autoplay; fullscreen"></iframe>
+  </div>
+
+  <!-- ===== Not found state ===== -->
+  <div class="not-found" id="not-found" style="display:none">
+    <h1>Plantilla no encontrada</h1>
+    <p>El identificador <code id="bad-id" class="text-white/80 bg-white/10 px-2 py-0.5 rounded"></code> no existe en el catálogo.</p>
+    <a href="index.html" class="btn">← Volver al catálogo</a>
+  </div>
+
+  <!-- ===== Toast ===== -->
+  <div id="toast" class="toast">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    <span id="toast-msg">Copiado</span>
+  </div>
+
+  <script src="templates.js"></script>
+  <script>
+    // ───── Resolve template from ?t=<id> ─────
+    const params = new URLSearchParams(location.search);
+    const id = params.get("t");
+    const tpl = (window.TEMPLATES || []).find(t => t.id === id);
+
+    const nameEl = document.getElementById("t-name");
+    const sectionEl = document.getElementById("t-section");
+    const sectionSep = document.getElementById("t-section-sep");
+    const frame = document.getElementById("frame");
+    const rawLink = document.getElementById("raw-link");
+    const copyBtn = document.getElementById("copy-btn");
+    const copyLabel = document.getElementById("copy-label");
+    const notFound = document.getElementById("not-found");
+    const badId = document.getElementById("bad-id");
+    const toast = document.getElementById("toast");
+    const toastMsg = document.getElementById("toast-msg");
+
+    if (!tpl) {
+      document.title = "Plantilla no encontrada";
+      nameEl.textContent = "—";
+      frame.style.display = "none";
+      notFound.style.display = "flex";
+      badId.textContent = id || "(vacío)";
+      copyBtn.style.display = "none";
+      rawLink.style.display = "none";
+    } else {
+      document.title = `${tpl.name} · Viewer`;
+      nameEl.textContent = tpl.name;
+      sectionEl.textContent = tpl.section;
+      sectionEl.style.display = "";
+      sectionSep.style.display = "";
+      sectionEl.href = tpl.path;
+      sectionEl.target = "_blank";
+      frame.src = tpl.path;
+      rawLink.href = tpl.path;
+    }
+
+    // ───── Copy logic ─────
+    let toastTimer;
+    function showToast(msg, isError = false) {
+      toastMsg.textContent = msg;
+      toast.style.color = isError ? "#fca5a5" : "#fff";
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
+    if (tpl) {
+      copyBtn.addEventListener("click", async () => {
+        const original = copyLabel.textContent;
+        copyLabel.textContent = "Copiando…";
+        copyBtn.disabled = true;
+        try {
+          const res = await fetch(tpl.path);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const code = await res.text();
+          await navigator.clipboard.writeText(code);
+          copyLabel.textContent = "¡Copiado!";
+          showToast(`Código de "${tpl.name}" copiado (${(code.length / 1024).toFixed(1)} KB)`);
+        } catch (err) {
+          console.error(err);
+          copyLabel.textContent = "Error";
+          const isFile = location.protocol === "file:";
+          showToast(
+            isFile ? "Necesitas un servidor local (npx serve .)" : "No se pudo leer el archivo",
+            true
+          );
+        } finally {
+          setTimeout(() => {
+            copyLabel.textContent = original;
+            copyBtn.disabled = false;
+          }, 1500);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

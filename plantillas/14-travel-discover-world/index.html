@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Travel — Discover the World</title>
+  <meta
+    name="description"
+    content="Escape the ordinary and find inspiration in the most breathtaking corners of the globe."
+  />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-13) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- Framer Motion (UMD → window.Motion) -->
+  <script src="https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js"></script>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+    html, body { height: 100%; background-color: #f3ebe4; font-family: 'Inter', system-ui, sans-serif; }
+    ::selection { background: #000; color: #fff; }
+
+    .destinations-page { overflow-y: auto; }
+
+    .hero-container { position: relative; width: 100vw; height: 100vh; display: flex; }
+    .left-bg  { width: 50vw; height: 100%; background-color: #f3ebe4; }
+    .right-bg { width: 50vw; height: 100%; position: relative; display: flex; justify-content: flex-end; align-items: flex-end; padding: 30px; }
+    .bg-image-wrapper { position: absolute; inset: 0; z-index: 0; }
+
+    .text-layer-wrapper { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; pointer-events: none; z-index: 20; }
+    .text-black-side { color: #1c1c1c; clip-path: inset(0 50% 0 0); }
+    .text-white-side { color: white;   clip-path: inset(0 0 0 50%); }
+
+    .gem-card { position: relative; z-index: 30; background: white; border-radius: 32px; padding: 16px; display: flex; gap: 24px; width: 100%; height: 200px; box-shadow: 0 25px 60px -15px rgba(0,0,0,0.15); }
+    .gem-image-box { width: 200px; height: 100%; border-radius: 20px; }
+    .gem-content { display: flex; flex-direction: column; justify-content: space-between; padding: 8px 0; }
+    #explorebtn { padding: 12px 24px; }
+
+    .footerLink { color: #000; }
+    .footerLink:hover { margin-left: 10px; color: #555; }
+
+    #destcontainer { padding: 30px; padding-top: 100px; }
+    #Popular { margin-bottom: 1rem; }
+    #infocard { padding: 24px; gap: 24px; }
+    #tourcontainer { padding: 30px; }
+    #bookbtn { padding: 8px; }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    @media (max-width: 1000px) {
+      .gem-image-box { display: none; }
+      .gem-content p { font-size: 15px; }
+      #destcontainer { padding: 20px; padding-top: 80px; }
+    }
+
+    @media (max-width: 850px) {
+      #topContent { padding: 6px; gap: 10px; }
+      .left-bg, .text-black-side { display: none; }
+      .right-bg { width: 100vw; padding: 0; }
+      .text-white-side { clip-path: none; width: 100vw; color: white; }
+      .gem-card { max-width: 100%; flex-direction: column; border-radius: 40px 40px 0 0; padding: 24px; gap: 15px; position: fixed; bottom: 0; left: 0; right: 0; box-shadow: 0 -15px 50px rgba(0,0,0,0.15); }
+      .gem-image-box { display: none; }
+      .gem-content { width: 100%; text-align: left; }
+      .gem-content p { font-size: 12px; }
+      #destcontainer { padding: 10px; padding-top: 120px; }
+    }
+
+    @media (max-width: 500px) {
+      #tourcontainer { padding: 10px; padding-top: 100px; justify-content: center; }
+      #searchInput { margin-bottom: 3rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+    (function () {
+      const _err = console.error;
+      console.error = function (...args) {
+        const msg = args[0];
+        if (typeof msg === 'string' && msg.includes('unique "key" prop')) return;
+        _err.apply(console, args);
+      };
+    })();
+  </script>
+
+  <script type="text/babel">
+    const { useEffect, useRef, useState } = React;
+    const { motion, AnimatePresence } = window.Motion;
+
+    // ───── Constants ─────
+    const goldEase = [0.76, 0, 0.24, 1];
+
+    // 10 placeholder photographs (travel-themed via Picsum specific IDs)
+    const PICSUM = (id) => `https://picsum.photos/id/${id}/800/800`;
+    const IMG = {
+      1: PICSUM(1018),  // forest road
+      2: PICSUM(1036),  // mountain
+      3: PICSUM(1019),  // mountain peak
+      4: PICSUM(1043),  // fjord
+      5: PICSUM(1015),  // valley
+      6: PICSUM(1051),  // lake
+      7: PICSUM(1003),  // beach
+      8: PICSUM(133),   // desert dune
+      9: PICSUM(1059),  // mountains
+      10: PICSUM(1060), // forest
+    };
+
+    // CloudFront video URLs (verbatim per spec)
+    const HERO_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_220929_e6719f25-1ba0-45c2-97fc-0148805d9fb9.mp4';
+    const GEM_VIDEO  = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260509_073207_eeb9b7e5-7df4-4204-80c2-163eb46466e8.mp4';
+    const TOUR_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_071134_9cc2f2d8-a599-4a73-8c89-6eb4af170352.mp4';
+
+    // ───── Tours ─────
+    const tours = [
+      { id: 'cold-islands-norway', image: IMG[1], video: TOUR_VIDEO, images: [IMG[4], IMG[6], IMG[9]],
+        name: 'Cold Islands Norway',
+        description: "Experience the raw beauty of Norway's remote arctic islands. From dramatic fjords to the magical northern lights, Norway offers a perfect blend of wilderness and Scandinavian culture.",
+        price: 1800, priceDisplay: '$1,800', friends: 8, bestTime: 'Jun - Sep', visa: 'Schengen / EU', imgH: 230, w: 200 },
+      { id: 'serengeti-tanzania', image: IMG[2], images: [IMG[5], IMG[7], IMG[8]],
+        name: 'Serengeti National Park, Tanzania',
+        description: 'Witness the greatest wildlife spectacle on Earth. The Serengeti offers unmatched safari experiences, from the Great Migration to close encounters with the Big Five across endless golden plains.',
+        price: 2400, priceDisplay: '$2,400', friends: 14, bestTime: 'Jul - Oct', visa: 'Visa on arrival', imgH: 310, w: 340 },
+      { id: 'switzerland-alps', image: IMG[3], images: [IMG[1], IMG[6], IMG[10]],
+        name: 'Switzerland',
+        description: 'Experience the pinnacle of alpine serenity. From the pristine peaks of the Jungfrau region to the crystal-clear waters of Lake Brienz, Switzerland offers a perfect blend of high-end comfort and untouched nature.',
+        price: 3200, priceDisplay: '$3,200', friends: 12, bestTime: 'May - Oct', visa: 'Schengen / EU', imgH: 360, w: 250 },
+      { id: 'norway-coastal', image: IMG[4], images: [IMG[1], IMG[9], IMG[6]],
+        name: 'Cold Islands Norway',
+        description: "Sail through Norway's stunning coastal landscapes where turquoise waters meet towering cliffs. A journey through some of the most dramatic scenery on the planet.",
+        price: 1800, priceDisplay: '$1,800', friends: 6, bestTime: 'May - Aug', visa: 'Schengen / EU', imgH: 215, w: 210 },
+      { id: 'mountain-valleys-iceland', image: IMG[6], images: [IMG[5], IMG[3], IMG[9]],
+        name: 'Mountain Valleys, Iceland',
+        description: "Explore Iceland's surreal volcanic landscapes, cascading waterfalls and geothermal wonders. A land of fire and ice unlike anywhere else on Earth.",
+        price: 2100, priceDisplay: '$2,100', friends: 9, bestTime: 'Jun - Aug', visa: 'Schengen / EU', imgH: 250, w: 235 },
+      { id: 'hidden-coves-croatia', image: IMG[7], images: [IMG[8], IMG[2], IMG[5]],
+        name: 'Hidden Coves, Croatia',
+        description: "Discover Croatia's secluded Adriatic coastline — crystal clear waters, ancient walled cities and charming fishing villages tucked between dramatic limestone cliffs.",
+        price: 1950, priceDisplay: '$1,950', friends: 11, bestTime: 'May - Sep', visa: 'Schengen / EU', imgH: 300, w: 220 },
+      { id: 'desert-dunes-morocco', image: IMG[8], images: [IMG[2], IMG[7], IMG[10]],
+        name: 'Desert Dunes, Morocco',
+        description: "Journey into the Sahara's vast golden dunes, ancient medinas and vibrant souks. Morocco blends Berber, Arab and French influences into one unforgettable sensory experience.",
+        price: 1600, priceDisplay: '$1,600', friends: 7, bestTime: 'Oct - Apr', visa: 'Visa free / 90 days', imgH: 240, w: 215 },
+    ];
+
+    const getTourById = (id) => tours.find((t) => t.id === id);
+
+    // ───── Hash router ─────
+    function useHashRoute() {
+      const [hash, setHash] = useState(() => window.location.hash || '#/');
+      useEffect(() => {
+        const onChange = () => setHash(window.location.hash || '#/');
+        window.addEventListener('hashchange', onChange);
+        return () => window.removeEventListener('hashchange', onChange);
+      }, []);
+      const path = hash.replace(/^#/, '') || '/';
+      return path;
+    }
+
+    function navigate(path) {
+      window.location.hash = path;
+    }
+
+    function Link({ href, children, ...rest }) {
+      const onClick = (e) => {
+        e.preventDefault();
+        navigate(href);
+      };
+      return (
+        <a href={'#' + href} onClick={onClick} {...rest}>
+          {children}
+        </a>
+      );
+    }
+
+    // ───── Icons (lucide inline) ─────
+    const lucideBase = {
+      viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+      strokeLinecap: 'round', strokeLinejoin: 'round',
+    };
+    function Star({ size = 24, fill = 'none', strokeWidth = 2, className = '', style }) {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor"
+             strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round"
+             className={className} style={style}>
+          <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />
+        </svg>
+      );
+    }
+    function MenuIcon({ size = 24, strokeWidth = 2, className = '', style }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} strokeWidth={strokeWidth} className={className} style={style}>
+          <line x1="4" x2="20" y1="12" y2="12" />
+          <line x1="4" x2="20" y1="6"  y2="6"  />
+          <line x1="4" x2="20" y1="18" y2="18" />
+        </svg>
+      );
+    }
+    function XIcon({ size = 24, strokeWidth = 2, className = '', style }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} strokeWidth={strokeWidth} className={className} style={style}>
+          <path d="M18 6 6 18" />
+          <path d="m6 6 12 12" />
+        </svg>
+      );
+    }
+    function ArrowRight({ size = 24, className = '', style }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} strokeWidth={2} className={className} style={style}>
+          <path d="M5 12h14" />
+          <path d="m12 5 7 7-7 7" />
+        </svg>
+      );
+    }
+    function ArrowLeft({ size = 24, className = '', style }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} strokeWidth={2} className={className} style={style}>
+          <path d="m12 19-7-7 7-7" />
+          <path d="M19 12H5" />
+        </svg>
+      );
+    }
+
+    // ═════════════════════════ Navbar ═════════════════════════
+    function Navbar({ pathname }) {
+      const [menuOpen, setMenuOpen] = useState(false);
+      const desktopLinks = [
+        { label: 'About',        href: '/' },
+        { label: 'Destinations', href: '/destinations' },
+        { label: 'Booking',      href: '/booking' },
+        { label: 'FAQ',          href: '/faq' },
+        { label: 'Account',      href: '/account' },
+      ];
+      const mobileLinks = desktopLinks.filter((l) => l.label !== 'Account');
+
+      const isHome       = pathname === '/';
+      const isTourDetail = pathname.startsWith('/destinations/') && pathname !== '/destinations';
+
+      // Star color logic
+      const starColor =
+        menuOpen ? 'text-black' :
+        isTourDetail ? 'text-white' :
+        isHome ? 'max-[850px]:text-white min-[851px]:text-black' :
+        'text-black';
+
+      const menuColor = (isHome || isTourDetail) ? 'text-white' : 'text-black';
+
+      return (
+        <>
+          {/* Star logo top-left */}
+          <div
+            className={`fixed ${starColor} pointer-events-none`}
+            style={{ top: 30, left: 30, zIndex: 1001 }}
+          >
+            <Star size={30} fill="currentColor" strokeWidth={0} />
+          </div>
+
+          {/* Hamburger */}
+          <button
+            onClick={() => setMenuOpen(true)}
+            className={`fixed transition-transform duration-300 ease-out hover:scale-110 ${menuColor}`}
+            style={{ top: 30, right: 30, zIndex: 300 }}
+            aria-label="Open menu"
+          >
+            <MenuIcon size={32} />
+          </button>
+
+          {/* Mobile overlay */}
+          <AnimatePresence>
+            {menuOpen && (
+              <motion.div
+                initial={{ y: '-100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '-100%' }}
+                transition={{ duration: 0.75, ease: goldEase }}
+                className="fixed inset-0 z-[1000] bg-white flex flex-col items-center justify-center"
+              >
+                <button
+                  onClick={() => setMenuOpen(false)}
+                  className="absolute text-black transition-transform duration-300 hover:rotate-90"
+                  style={{ top: 30, right: 30 }}
+                  aria-label="Close menu"
+                >
+                  <XIcon size={32} />
+                </button>
+
+                <nav className="flex flex-col items-center gap-3">
+                  {mobileLinks.map((l, i) => {
+                    const active = pathname === l.href;
+                    return (
+                      <motion.div
+                        key={l.label}
+                        initial={{ opacity: 0, y: 28 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.55, delay: 0.3 + i * 0.07, ease: goldEase }}
+                      >
+                        <Link
+                          href={l.href}
+                          onClick={(e) => { e.preventDefault(); navigate(l.href); setMenuOpen(false); }}
+                          className="text-5xl md:text-7xl font-light tracking-tighter hover:italic text-black flex items-center"
+                        >
+                          {active && <span className="mr-1">/</span>}
+                          {l.label}
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+                </nav>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Desktop nav (only when NOT tour detail) */}
+          {!isTourDetail && (
+            <nav
+              className="fixed flex-col gap-1 hidden min-[851px]:flex"
+              style={{ bottom: 40, left: 40, zIndex: 200 }}
+            >
+              {desktopLinks.map((l, i) => {
+                const active = pathname === l.href;
+                const color = isHome ? 'text-white' : 'text-black';
+                return (
+                  <motion.div
+                    key={l.label}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 0.4 + i * 0.08, ease: goldEase }}
+                  >
+                    <Link
+                      href={l.href}
+                      className={`text-[13px] tracking-widest font-medium hover:opacity-70 transition-opacity flex items-center ${color}`}
+                    >
+                      {active && <span className="mr-0.5">/</span>}
+                      {l.label}
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </nav>
+          )}
+        </>
+      );
+    }
+
+    // ═════════════════════════ HeroContent ═════════════════════════
+    function HeroContent() {
+      return (
+        <div
+          id="topContent"
+          className="flex flex-col items-center justify-center transform -translate-y-[40px] md:-translate-y-[20px] px-6"
+        >
+          <div className="overflow-hidden">
+            <motion.h1
+              initial={{ y: '110%' }}
+              animate={{ y: 0 }}
+              transition={{ duration: 1.1, ease: goldEase }}
+              className="font-light leading-[1.05] tracking-[-0.04em]"
+              style={{ fontSize: 'clamp(42px, 6vw, 80px)' }}
+            >
+              Discover the beauty
+            </motion.h1>
+          </div>
+          <div className="overflow-hidden mb-8">
+            <motion.h1
+              initial={{ y: '110%' }}
+              animate={{ y: 0 }}
+              transition={{ duration: 1.1, delay: 0.08, ease: goldEase }}
+              className="font-light leading-[1.05] tracking-[-0.04em]"
+              style={{ fontSize: 'clamp(42px, 6vw, 80px)' }}
+            >
+              of the world around
+            </motion.h1>
+          </div>
+          <motion.p
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, delay: 0.55, ease: goldEase }}
+            className="leading-[1.7] max-w-[550px] mx-auto opacity-80 font-light tracking-wide"
+            style={{ fontSize: 'clamp(14px, 1vw, 16px)' }}
+          >
+            Escape the ordinary and find inspiration in the most breathtaking corners of
+            the globe. We curate unique travel experiences tailored to your rhythm and
+            spirit.
+          </motion.p>
+        </div>
+      );
+    }
+
+    // ═════════════════════════ HeroSection ═════════════════════════
+    function HeroSection() {
+      const videoRef = useRef(null);
+
+      useEffect(() => {
+        const v = videoRef.current;
+        if (!v) return;
+        v.muted = true;
+        v.play().catch(() => {});
+        const onLoaded = () => v.play().catch(() => {});
+        v.addEventListener('loadeddata', onLoaded);
+        return () => v.removeEventListener('loadeddata', onLoaded);
+      }, []);
+
+      return (
+        <div className="bg-[#f3ebe4] min-h-screen overflow-hidden font-sans">
+          <main className="hero-container">
+            <div className="left-bg" />
+            <div className="right-bg">
+              <div className="bg-image-wrapper">
+                <motion.div
+                  initial={{ scale: 1.06 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 2.2, ease: goldEase }}
+                  className="relative w-full h-full"
+                >
+                  <video
+                    ref={videoRef}
+                    src={HERO_VIDEO}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="auto"
+                    className="absolute inset-0 w-full h-full object-cover object-left"
+                  />
+                </motion.div>
+              </div>
+
+              <div className="absolute inset-0 bg-black/20 md:bg-transparent" />
+
+              <motion.div
+                initial={{ y: 60, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 1.1, delay: 0.5, ease: goldEase }}
+                className="gem-card"
+              >
+                <div className="gem-image-box relative shrink-0 overflow-hidden">
+                  <video
+                    src={GEM_VIDEO}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="auto"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </div>
+                <div className="gem-content" style={{ gap: 20 }}>
+                  <div className="mb-5 md:mb-0">
+                    <h3 className="font-semibold text-[#1c1c1c] text-xl md:text-base mb-2">
+                      Hidden Gems
+                    </h3>
+                    <p className="text-gray-500 text-xs leading-relaxed">
+                      Explore our handpicked collection of authentic stays and secluded
+                      retreats, where nature meets comfort in perfect harmony.
+                    </p>
+                  </div>
+                  <Link
+                    id="explorebtn"
+                    href="/destinations"
+                    className="bg-black text-white px-8 py-4 md:px-5 md:py-2.5 rounded-full text-xs flex items-center gap-2 self-start hover:bg-zinc-800 transition-all duration-300 active:scale-95 cursor-pointer"
+                  >
+                    Explore more <ArrowRight size={14} />
+                  </Link>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Text layers */}
+            <div className="text-layer-wrapper text-black-side">
+              <HeroContent />
+            </div>
+            <div className="text-layer-wrapper text-white-side">
+              <HeroContent />
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    // ═════════════════════════ DestinationsSection ═════════════════════════
+    function DestinationsSection() {
+      const [query, setQuery] = useState('');
+      const filtered = tours.filter((t) =>
+        t.name.toLowerCase().includes(query.toLowerCase())
+      );
+
+      return (
+        <div className="bg-[#f3ebe4] min-h-screen font-sans destinations-page">
+          <div id="destcontainer" className="transition-all duration-500">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: goldEase }}
+              className="flex justify-center mb-8"
+            >
+              <input
+                id="searchInput"
+                type="text"
+                placeholder="Find your tour"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full max-w-2xl bg-transparent font-light tracking-[-0.02em] outline-none placeholder-black/20 caret-black/40 text-center"
+                style={{ fontSize: 'clamp(24px, 4vw, 42px)' }}
+              />
+            </motion.div>
+
+            <motion.p
+              id="Popular"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-sm font-medium tracking-widest"
+              style={{ marginBottom: 15 }}
+            >
+              Popular
+            </motion.p>
+
+            <div className="flex gap-5 overflow-x-auto pb-6 no-scrollbar">
+              {filtered.length === 0 && (
+                <p className="text-black/40 text-sm pt-4">
+                  No tours found for "{query}"
+                </p>
+              )}
+              {filtered.map((tour, i) => (
+                <motion.div
+                  key={tour.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.55, delay: 0.1 + i * 0.07, ease: goldEase }}
+                  style={{ width: tour.w, flexShrink: 0 }}
+                >
+                  <Link
+                    href={`/destinations/${tour.id}`}
+                    className="flex flex-col gap-3 group"
+                  >
+                    <div
+                      className="relative rounded-2xl overflow-hidden"
+                      style={{ height: tour.imgH }}
+                    >
+                      {tour.video ? (
+                        <video
+                          src={`${tour.video}#t=0.1`}
+                          muted
+                          playsInline
+                          preload="metadata"
+                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                        />
+                      ) : (
+                        <img
+                          src={tour.image}
+                          alt={tour.name}
+                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                        />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium leading-tight">{tour.name}</h3>
+                      <p className="text-sm text-black/45 mt-1">
+                        {tour.priceDisplay} / person
+                      </p>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ═════════════════════════ TourDetailSection ═════════════════════════
+    function TourDetailSection({ tour }) {
+      const friends = tour.friends;
+      return (
+        <div
+          id="tourcontainer"
+          className="relative min-h-screen w-full flex items-end justify-end font-sans overflow-hidden p-4 md:p-10"
+        >
+          {/* Background */}
+          <div className="absolute inset-0 z-0 overflow-hidden">
+            <motion.div
+              initial={{ scale: 1.06 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 2.2, ease: goldEase }}
+              className="relative w-full h-full"
+            >
+              {tour.video ? (
+                <video
+                  src={tour.video}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : (
+                <>
+                  <img
+                    src={tour.image}
+                    alt={tour.name}
+                    className="absolute inset-0 w-full h-full object-cover brightness-90"
+                  />
+                  <div className="absolute inset-0 bg-black/10 md:bg-transparent md:bg-gradient-to-r from-black/20 to-transparent" />
+                </>
+              )}
+            </motion.div>
+          </div>
+
+          {/* Info card */}
+          <motion.div
+            id="infocard"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: goldEase }}
+            className="relative z-10 w-full max-w-[400px] bg-[#f3ebe4] rounded-[20px] shadow-2xl overflow-y-auto max-h-[90vh] no-scrollbar sm:gap-6 gap-2 flex flex-col"
+          >
+            <div className="flex flex-col" style={{ gap: 10 }}>
+              <Link
+                href="/destinations"
+                className="inline-flex items-center gap-2 text-sm text-black px-4 py-2 rounded-full transition-all hover:bg-black/5 self-start -ml-4"
+              >
+                <ArrowLeft size={15} />
+                Back to explore
+              </Link>
+              <h1 className="text-[20px] font-semibold text-[#1c1c1c] mb-4 tracking-tight">
+                {tour.name}
+              </h1>
+            </div>
+
+            <p className="sm:text-[15px] text-[12px] text-black/70 leading-relaxed mb-8">
+              {tour.description}
+            </p>
+
+            {/* Friends row */}
+            <div className="flex items-center gap-4 mb-10">
+              <div className="flex items-center">
+                {tour.images.slice(0, 3).map((src, i) => (
+                  <div
+                    key={i}
+                    className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-[#f3ebe4] shadow-sm"
+                    style={{ marginLeft: i === 0 ? 0 : -12, zIndex: 3 - i }}
+                  >
+                    <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                  </div>
+                ))}
+                <div
+                  className="w-9 h-9 rounded-full bg-black text-white text-[11px] font-bold flex items-center justify-center border-2 border-[#f3ebe4]"
+                  style={{ marginLeft: -12 }}
+                >
+                  +{friends - 3}
+                </div>
+              </div>
+              <span className="text-[13px] font-medium text-black/60">
+                {friends} friends been there
+              </span>
+            </div>
+
+            {/* Info rows */}
+            <div className="mb-10" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div className="flex justify-between items-center pb-4 border-b border-black/10">
+                <span className="text-[13px] text-black/40 font-medium uppercase tracking-wider">
+                  Avg cost per trip
+                </span>
+                <span className="text-sm font-bold text-black/90">{tour.priceDisplay}</span>
+              </div>
+              <div className="flex justify-between items-center pb-4 border-b border-black/10">
+                <span className="text-[13px] text-black/40 font-medium uppercase tracking-wider">
+                  Best time to visit
+                </span>
+                <span className="text-sm font-bold text-black/90">{tour.bestTime}</span>
+              </div>
+              <div className="flex justify-between items-center pb-2">
+                <span className="text-[13px] text-black/40 font-medium uppercase tracking-wider">
+                  Visa
+                </span>
+                <span className="text-sm font-bold text-black/90">
+                  <span className="text-blue-600">🇪🇺</span> {tour.visa}
+                </span>
+              </div>
+            </div>
+
+            {/* Thumbnails grid */}
+            <div className="grid grid-cols-3 gap-3 mb-8">
+              {tour.images.map((src, i) => (
+                <div key={i} className="relative aspect-square rounded-[20px] overflow-hidden group">
+                  <img
+                    src={src}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <motion.button
+              id="bookbtn"
+              whileHover={{ y: -2 }}
+              className="w-full bg-[#0f1115] text-white rounded-[24px] text-[15px] font-bold tracking-tight hover:bg-black active:scale-[0.98] transition-all duration-300"
+            >
+              Book this tour
+            </motion.button>
+          </motion.div>
+        </div>
+      );
+    }
+
+    // ═════════════════════════ NotFound ═════════════════════════
+    function NotFound() {
+      return (
+        <div className="bg-[#f3ebe4] min-h-screen w-full flex flex-col items-center justify-center text-center px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, ease: goldEase }}
+            className="font-light leading-none tracking-[-0.04em] text-black/10 select-none"
+            style={{ fontSize: 120 }}
+          >
+            404
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.15, ease: goldEase }}
+            className="text-2xl font-light tracking-tight text-black mt-4 mb-3"
+          >
+            Page not found
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.25, ease: goldEase }}
+            className="text-sm text-black/40 mb-10"
+          >
+            This page doesn&apos;t exist yet.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.35, ease: goldEase }}
+          >
+            <Link
+              href="/"
+              className="text-[13px] tracking-widest font-medium text-black border-b border-black/20 pb-0.5 hover:border-black transition-colors duration-200"
+            >
+              Back to home
+            </Link>
+          </motion.div>
+        </div>
+      );
+    }
+
+    // ═════════════════════════ App (hash router) ═════════════════════════
+    function App() {
+      const path = useHashRoute();
+
+      let view;
+      if (path === '/') view = <HeroSection />;
+      else if (path === '/destinations') view = <DestinationsSection />;
+      else {
+        const m = path.match(/^\/destinations\/(.+)$/);
+        if (m) {
+          const tour = getTourById(m[1]);
+          view = tour ? <TourDetailSection tour={tour} /> : <NotFound />;
+        } else {
+          view = <NotFound />;
+        }
+      }
+
+      return (
+        <>
+          <Navbar pathname={path} />
+          {view}
+        </>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

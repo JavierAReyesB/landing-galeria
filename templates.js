@@ -1,0 +1,291 @@
+// ───── Catálogo de plantillas (fuente única de verdad) ─────
+// Para añadir una nueva: duplica un bloque, edita los campos, suma una carpeta a /plantillas
+window.TEMPLATES = [
+  {
+    id: "01-aetheris-voyage",
+    name: "Aetheris Voyage",
+    section: "Hero + Capabilities",
+    type: "Landing cinematográfica",
+    description:
+      "Landing oscura de viajes espaciales con vídeos de fondo en loop, sistema liquid-glass y animaciones Framer Motion palabra-a-palabra.",
+    tags: ["React", "Tailwind", "Framer Motion", "Liquid Glass", "CDN"],
+    path: "plantillas/01-aetheris-voyage/index.html",
+    preview: "plantillas/01-aetheris-voyage/preview.png",
+  },
+  {
+    id: "02-unleash-full-power",
+    name: "Unleash The Full Power",
+    section: "Hero scroll-driven + About",
+    type: "Hero cinematográfico interactivo",
+    description:
+      "Vídeo HLS que se escrubea con el scroll, titular gigante Dirtyline que se desintegra, panel glass 3D con parallax y pill nav con relleno líquido en hover.",
+    tags: ["React 19", "Tailwind v4", "GSAP", "ScrollTrigger", "hls.js"],
+    path: "plantillas/02-unleash-full-power/index.html",
+    preview: "plantillas/02-unleash-full-power/preview.png",
+  },
+  {
+    id: "03-velorah-silence",
+    name: "Velorah — Where dreams rise through the silence",
+    section: "Hero único (single-page)",
+    type: "Hero cinematográfico minimalista",
+    description:
+      "Hero fullscreen sobre vídeo en loop con navegación glassmorphic, titular Instrument Serif a dos tonos (foreground + muted) y animación de entrada fade-rise escalonada vía CSS.",
+    tags: ["React", "Tailwind", "Liquid Glass", "Instrument Serif", "CDN"],
+    path: "plantillas/03-velorah-silence/index.html",
+    preview: "plantillas/03-velorah-silence/preview.png",
+  },
+  {
+    id: "04-wild-daisy-fragrances",
+    name: "Wild Daisy Fragrances",
+    section: "Hero + ScentFinder + WildScent",
+    type: "Landing producto (perfumes) con vídeo + bloques color",
+    description:
+      "Landing de 3 secciones: hero con vídeo y card flotante de producto, panel split azul (Eau So Sweet) y panel split lima (Eau So Extra), con animaciones de entrada por IntersectionObserver y transiciones cubic-bezier.",
+    tags: ["React", "Tailwind", "IntersectionObserver", "Video", "CDN"],
+    path: "plantillas/04-wild-daisy-fragrances/index.html",
+    preview: "plantillas/04-wild-daisy-fragrances/preview.png",
+  },
+  {
+    id: "05-pureflow-one",
+    name: "PureFlow One",
+    section: "Hero único con spotlight reveal",
+    type: "Hero interactivo con cursor-tracking",
+    description:
+      "Hero con dos imágenes superpuestas: la segunda solo se ve dentro de un spotlight radial dibujado en canvas y aplicado como mask-image, siguiendo al cursor con easing. Rejilla SVG con parallax sutil, nav pill central + CTA con punto verde.",
+    tags: ["React", "Tailwind", "Canvas Mask", "rAF", "CDN"],
+    path: "plantillas/05-pureflow-one/index.html",
+    preview: "plantillas/05-pureflow-one/preview.png",
+  },
+  {
+    id: "06-prisma-studio",
+    name: "Prisma — Visual arts collective",
+    section: "Hero + About + Features (4 cards)",
+    type: "Landing creative studio (dark, cinematic)",
+    description:
+      "Landing oscura para colectivo creativo. Hero con vídeo + noise overlay + título gigante con animación word-pull-up, About con tipografía mixta Almarai/Instrument Serif italic y reveal de texto carácter a carácter por scroll, Features con grid de 4 cards (1 vídeo + 3 checklist).",
+    tags: ["React", "Tailwind", "Framer Motion", "Scroll-linked", "CDN"],
+    path: "plantillas/06-prisma-studio/index.html",
+    preview: "plantillas/06-prisma-studio/preview.png",
+  },
+  {
+    id: "07-micro-boomerang",
+    name: "micro — Organized.",
+    section: "Hero único con vídeo en boomerang split",
+    type: "Hero interactivo (frame-capture + canvas slicing)",
+    description:
+      "Hero oscuro con un único vídeo que se reproduce hacia delante una vez, captura cada frame a canvas offscreen, y luego se renderiza en bucle boomerang sobre 3 canvases sincronizados que se comportan como una superficie continua object-cover. Píldora central con imagen, orbes glow, gradiente de fade y CTA bottom-right.",
+    tags: ["React", "Tailwind", "Canvas slicing", "Boomerang", "rVFC", "CDN"],
+    path: "plantillas/07-micro-boomerang/index.html",
+    preview: "plantillas/07-micro-boomerang/preview.png",
+  },
+  {
+    id: "08-microvisuals",
+    name: "MicroVisuals",
+    section: "Hero único con boomerang + parallax mouse",
+    type: "Hero cinematográfico (frame-capture + gsap parallax)",
+    description:
+      "Hero fullscreen con título gigante italic Instrument Serif sobre vídeo en boomerang capturado frame a frame. Nav liquid-glass pill central, CTAs primario blanco + glass secundario, parallax sutil con gsap siguiendo al cursor.",
+    tags: ["React", "Tailwind", "GSAP", "Canvas Boomerang", "Liquid Glass", "CDN"],
+    path: "plantillas/08-microvisuals/index.html",
+    preview: "plantillas/08-microvisuals/preview.png",
+  },
+  {
+    id: "09-eos-web3",
+    name: "EOS — Web3 at the Speed of Experience",
+    section: "Hero único Web3 (video + gradient text)",
+    type: "Landing Web3 minimalista",
+    description:
+      "Hero fullscreen con vídeo de fondo y overlay 50% negro. Navbar con logo + 4 links con chevron-down + CTA pill 'Join Waitlist' con layered construction (borde 0.6px + interior negro + light streak). Hero centrado: badge con dot, H1 con gradiente diagonal clipeado al texto, subtítulo y CTA pill blanco.",
+    tags: ["React", "Tailwind", "General Sans", "Gradient Text", "Video BG", "CDN"],
+    path: "plantillas/09-eos-web3/index.html",
+    preview: "plantillas/09-eos-web3/preview.png",
+  },
+  {
+    id: "10-velorix-precision",
+    name: "velorix — Where precision finds its edge",
+    section: "Hero único + Nav con menú hamburguesa stagger",
+    type: "Hero AI minimalista",
+    description:
+      "Hero fullscreen con vídeo y nav pill central oscura sobre fondo negro. Mobile: hamburguesa con dropdown blur + stagger 80/130/180/230/280 ms y crossfade Menu↔X. Tipografía mixta Inter (heading/UI) + Courier New (subtítulo monospace) y CTA blanco con flecha animada.",
+    tags: ["React", "Tailwind", "Video BG", "Mobile Menu", "Mixed Type", "CDN"],
+    path: "plantillas/10-velorix-precision/index.html",
+    preview: "plantillas/10-velorix-precision/preview.png",
+  },
+  {
+    id: "11-jack-3d-creator",
+    name: "Jack — 3D Creator",
+    section: "Portfolio 5 secciones (Hero + Marquee + About + Services + Projects)",
+    type: "Portfolio creativo con scroll-driven animations",
+    description:
+      "Portfolio para un 3D creator. Hero con título gradient gigante + retrato con magnet hover, marquee de 21 GIFs con scroll parallax, About con 4 decoraciones en esquinas y texto char-by-char scroll reveal, Services sobre fondo blanco con números gigantes, y Projects con 3 cards sticky-stacking que se escalan al hacer scroll.",
+    tags: ["React", "Tailwind", "Framer Motion", "Sticky Stacking", "Magnet Hover", "CDN"],
+    path: "plantillas/11-jack-3d-creator/index.html",
+    preview: "plantillas/11-jack-3d-creator/preview.png",
+  },
+  {
+    id: "12-wanderful-travel",
+    name: "Wanderful — Venture without edges",
+    section: "Hero único travel con video parallax",
+    type: "Hero cinematográfico simple (gsap parallax)",
+    description:
+      "Hero fullscreen para marca de viajes. Vídeo de fondo a playbackRate 1.25 con parallax sutil al cursor vía gsap. Nav pill liquid-glass central con 4 links, wordmark con sup TM, headline en dos líneas (blanco + white/55), párrafo + CTA blanco + 'SECURE BY DESIGN' con Lock icon.",
+    tags: ["React", "Tailwind", "GSAP Parallax", "Liquid Glass", "Inter", "CDN"],
+    path: "plantillas/12-wanderful-travel/index.html",
+    preview: "plantillas/12-wanderful-travel/preview.png",
+  },
+  {
+    id: "13-vision-of-engineering",
+    name: "The vision of engineering is human + AI",
+    section: "Hero único con HLS + iconos de vídeo circulares",
+    type: "Hero AI/HR cinematográfico",
+    description:
+      "Hero fullscreen con stream HLS reproducido vía hls.js. Heading en 3 líneas con gradiente clipeado al texto y dos iconos circulares de vídeo (human + AI) embebidos en línea con el copy. CTA con glow verde menta sobre fondo negro y outline #30463C.",
+    tags: ["React", "Tailwind", "hls.js", "Gradient Text", "Inline Video Icons", "CDN"],
+    path: "plantillas/13-vision-of-engineering/index.html",
+    preview: "plantillas/13-vision-of-engineering/preview.png",
+  },
+  {
+    id: "14-travel-discover-world",
+    name: "Travel — Discover the World",
+    section: "Multi-página (Hero split + Destinations + Tour detail + 404)",
+    type: "Luxury travel concept (multi-route)",
+    description:
+      "Concepto luxury de viajes con 3 rutas (hash routing): Hero con split-screen mirrored vía clip-path negro/blanco y video parallax + gem card flotante, Destinations con buscador y galería horizontal de 7 tours, y Tour detail con video full-bleed + info card lateral con avatares apilados, datos del tour, grid de thumbnails y CTA.",
+    tags: ["React", "Tailwind", "Framer Motion", "Hash Routing", "Split-screen", "CDN"],
+    path: "plantillas/14-travel-discover-world/index.html",
+    preview: "plantillas/14-travel-discover-world/preview.png",
+  },
+  {
+    id: "15-vex-vision-action",
+    name: "VEX — Shaping tomorrow with vision and action",
+    section: "Hero único VC/Studio con video raw",
+    type: "Hero minimalista (char-by-char + liquid-glass)",
+    description:
+      "Hero fullscreen con vídeo de fondo SIN ningún overlay (vídeo raw a opacidad completa). Navbar liquid-glass pill con logo VEX + 4 links + CTA. Heading con animación carácter a carácter (stagger 30ms, translateX -18 → 0, opacity 0 → 1), subtítulo y botones con FadeIn escalonado, tag glass 'Investing. Building. Advisory.' bottom-right.",
+    tags: ["React", "Tailwind", "Liquid Glass", "Char Animation", "Video Raw", "CDN"],
+    path: "plantillas/15-vex-vision-action/index.html",
+    preview: "plantillas/15-vex-vision-action/preview.png",
+  },
+  {
+    id: "16-prosthetics-shark-tank",
+    name: "Simple, smart prosthetics",
+    section: "Hero único producto (video + nav pill twin + CTA outline)",
+    type: "Hero minimalista product/health",
+    description:
+      "Hero fullscreen con vídeo de fondo, navbar centrada en dos pills separadas (logo circular #EDEDED + pill horizontal con 4 links), y bloque inferior-izquierda con badge azul, headline gray-900, subtítulo y CTA outline azul que rellena en hover. Acentos blue-500/600/400 y arrow → con micro-translate en hover.",
+    tags: ["React", "Tailwind", "Video BG", "Pill Nav", "Minimalist", "CDN"],
+    path: "plantillas/16-prosthetics-shark-tank/index.html",
+    preview: "plantillas/16-prosthetics-shark-tank/preview.png",
+  },
+  {
+    id: "17-skyelite-private-jets",
+    name: "SkyElite — Premium. Accessible.",
+    section: "Hero único premium (video + heading overlap)",
+    type: "Hero luxury aviation",
+    description:
+      "Hero fullscreen para marca de jets privados. Vídeo de fondo, navbar con brand 'SkyElite' + 5 links + hamburguesa mobile (dropdown blur). Heading central con dos líneas solapadas vía margin-top negativo (-12px): 'Premium.' en gray-500 sobre 'Accessible.' en #202A36. Eyebrow 'PRIVATE JETS' tracking-wider y dos CTAs pill (gris + dark).",
+    tags: ["React", "Tailwind", "Video BG", "Mobile Menu", "Premium", "CDN"],
+    path: "plantillas/17-skyelite-private-jets/index.html",
+    preview: "plantillas/17-skyelite-private-jets/preview.png",
+  },
+  {
+    id: "18-novadesk-signup",
+    name: "NovaDesk — Sign up",
+    section: "Página de sign-up con card 2-columnas sobre video",
+    type: "Auth page premium",
+    description:
+      "Página de registro centrada con card 2-columnas sobre vídeo de fondo. Izquierda: form oscuro (rgba 10/92) con brand NovaDesk en #DA3F23, email + password con toggle Eye/EyeOff, checkbox custom con tick SVG, CTA blanco 'Launch Account', divider 'or join us via' y 3 social buttons (Google/Apple/Twitter) con iconos lucide. Derecha: panel glass con logo flotante.",
+    tags: ["React", "Tailwind", "Auth Form", "Video BG", "Lucide", "CDN"],
+    path: "plantillas/18-novadesk-signup/index.html",
+    preview: "plantillas/18-novadesk-signup/preview.png",
+  },
+  {
+    id: "19-toonhub-figurines",
+    name: "TOONHUB — Figurines",
+    section: "Hero único con carousel de figurines 3D (4 items, role-based)",
+    type: "Carousel producto interactivo",
+    description:
+      "Hero único con un carrusel de 4 figurines 3D que rotan entre 4 roles (center/left/right/back), cada uno con escala, blur y posición distinta. Background color cambia con el activeIndex (naranja/verde/rosa/azul) con crossfade 650ms cubic-bezier. Ghost text gigante '3D SHAPE' en Anton detrás, grain SVG overlay, nav arrows circulares y link 'DISCOVER IT' bottom-right.",
+    tags: ["React", "Tailwind", "Carousel", "Anton Font", "Role-based animations", "CDN"],
+    path: "plantillas/19-toonhub-figurines/index.html",
+    preview: "plantillas/19-toonhub-figurines/preview.png",
+  },
+  {
+    id: "20-studio-ai-web-design",
+    name: "Studio — The Website Your Brand Deserves",
+    section: "Landing AI web agency (7 secciones)",
+    type: "Landing premium multi-sección con HLS",
+    description:
+      "Landing oscura premium para agencia AI de diseño web. 7 secciones (Hero MP4 + StartSection HLS + FeaturesChess + FeaturesGrid + Stats HLS desaturado + Testimonials + CtaFooter HLS). Diseño liquid-glass + liquid-glass-strong, tipografía Instrument Serif italic + Barlow, BlurText word-by-word con IntersectionObserver, badges/headings/cards reutilizables.",
+    tags: ["React", "Tailwind", "Framer Motion", "hls.js", "Liquid Glass", "Multi-section", "CDN"],
+    path: "plantillas/20-studio-ai-web-design/index.html",
+    preview: "plantillas/20-studio-ai-web-design/preview.png",
+  },
+  {
+    id: "21-operations-automation",
+    name: "Intelligent Daily Routine Automation",
+    section: "2 secciones scroll-based (hero video + red + cloud parallax)",
+    type: "Landing SaaS automation con cloud transition",
+    description:
+      "Landing de 2 secciones: hero con vídeo + título italiana grande + CTA pill blanco, transición a sección roja #FF0000 con cloud overlay que hace parallax por scroll, logo SVG orgánico, signature 'S.P.D' en Marck Script y vídeo bottom. Tipografía Manrope (body) + Italiana (heading) + Marck Script (signature).",
+    tags: ["React", "Tailwind", "Framer Motion", "useScroll", "Cloud Parallax", "CDN"],
+    path: "plantillas/21-operations-automation/index.html",
+    preview: "plantillas/21-operations-automation/preview.png",
+  },
+  {
+    id: "22-grow-ai-recruitment",
+    name: "Grow — The most powerful AI in talent acquisition",
+    section: "Hero + Social proof con video fade-loop + logo marquee",
+    type: "Landing AI recruitment dark theme",
+    description:
+      "Landing dark deep-purple para recruitment AI. Hero con título 'Grow' gigante (gradient text General Sans clip), CTA liquid-glass pill 'Schedule a Consult', navbar con 4 items + Sign Up. Social proof section con vídeo de fondo que hace fade-in/out manual via rAF (loop seamless) y marquee horizontal infinito de 6 brand logos duplicados.",
+    tags: ["React", "Tailwind", "Gradient Text", "Video Fade Loop", "Marquee", "CDN"],
+    path: "plantillas/22-grow-ai-recruitment/index.html",
+    preview: "plantillas/22-grow-ai-recruitment/preview.png",
+  },
+  {
+    id: "23-aethera-eternal",
+    name: "Aethera — Beyond silence, we build the eternal",
+    section: "Hero único light theme + video fade-loop",
+    type: "Hero cinematográfico minimalista (light)",
+    description:
+      "Hero único sobre fondo blanco con vídeo posicionado abajo y fade-in/out loop manual via rAF. Wordmark 'Aethera®' Instrument Serif, navbar 5 links + CTA negro. Headline en Instrument Serif con dos palabras italics en #6F6F6F ('silence,' y 'the eternal.') como acentos sobre el negro. Animaciones fade-rise escalonadas 0/0.2/0.4s.",
+    tags: ["React", "Tailwind", "Light Theme", "Video Fade Loop", "Instrument Serif", "CDN"],
+    path: "plantillas/23-aethera-eternal/index.html",
+    preview: "plantillas/23-aethera-eternal/preview.png",
+  },
+  {
+    id: "24-speakup-creative",
+    name: "Speakup — Crafting the improbable",
+    section: "Hero único creative agency con video y heading verde",
+    type: "Hero light creative agency",
+    description:
+      "Hero light theme para agencia creativa Speakup. Logo SVG con marca registrada + wordmark SPEAKUP (bold+black). Heading 'Crafting the / improbable' en Recoleta Regular verde brand (#0E7824), nav 5 links con hover verde, CTA pill negro (#2D2D2F), hamburguesa móvil con overlay full-screen blanco.",
+    tags: ["React", "Tailwind", "Recoleta", "Light Theme", "Mobile Menu", "CDN"],
+    path: "plantillas/24-speakup-creative/index.html",
+    preview: "plantillas/24-speakup-creative/preview.png",
+  },
+  {
+    id: "25-vision-digital-reality",
+    name: "Your Vision · Our Digital Reality",
+    section: "Hero glassmorphism + HLS video mix-blend + logo cloud slider",
+    type: "Landing dark con purple/pink gradients",
+    description:
+      "Hero oscuro con gradientes pink/purple. Pill 'Used by founders' con Zap icon en cápsula gradient, H1 con gradient text clipeado (blanco→pink→purple), CTA glass pill con flecha. Vídeo HLS Cloudflare Stream con mix-blend-screen para fundir negros con el bg. Logo cloud infinito horizontal con brand logos (OpenAI, Nvidia, GitHub, etc.) en blanco invertido.",
+    tags: ["React", "Tailwind", "hls.js", "Mix-blend-screen", "Infinite Slider", "Gradient Text", "CDN"],
+    path: "plantillas/25-vision-digital-reality/index.html",
+    preview: "plantillas/25-vision-digital-reality/preview.png",
+  },
+  {
+    id: "26-max-reed-portfolio",
+    name: "Max Reed — London-based independent creator",
+    section: "Features grid 3-col personal portfolio (dark)",
+    type: "Bento dashboard portfolio",
+    description:
+      "Grid 3 columnas dark con cards bento. Col 1: vídeo bg + timeline carrera con sparkles. Col 2: client voice card #324444 con noise + 10M+ stats sobre vídeo. Col 3: Daily Software con 2 marquees infinitos de iconos (Figma, Framer, Palette...) + Reach Me card con email/phone y ArrowUpRight button.",
+    tags: ["React", "Tailwind", "Bento Grid", "Marquee", "Liquid Glass", "Noise SVG", "CDN"],
+    path: "plantillas/26-max-reed-portfolio/index.html",
+    preview: "plantillas/26-max-reed-portfolio/preview.png",
+  },
+  // Próximas plantillas se añaden aquí ↓
+];

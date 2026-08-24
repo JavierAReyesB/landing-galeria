@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TOONHUB — Figurines</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-18) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- Google Fonts: Anton + Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    html, body { background: #000; }
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow: hidden;
+    }
+
+    /* Grain texture (SVG fractalNoise) */
+    .grain {
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      opacity: 0.4;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useRef, useState } = React;
+
+    const IMAGES = [
+      { src: 'https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/1.02464a56.png', bg: '#F4845F', panel: '#F79B7F' },
+      { src: 'https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/2.b977faab.png', bg: '#6BBF7A', panel: '#85CC92' },
+      { src: 'https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/3.4df853b4.png', bg: '#E882B4', panel: '#ED9DC4' },
+      { src: 'https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/4.4457fbce.png', bg: '#6EB5FF', panel: '#8DC4FF' },
+    ];
+
+    const EASE = 'cubic-bezier(0.4, 0, 0.2, 1)';
+    const ANIM_MS = 650;
+
+    // ───── Lucide icons (inline) ─────
+    function ArrowLeft({ size = 24, strokeWidth = 2.25, className = '' }) {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" strokeWidth={strokeWidth}
+             strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="m12 19-7-7 7-7" />
+          <path d="M19 12H5" />
+        </svg>
+      );
+    }
+    function ArrowRight({ size = 24, strokeWidth = 2.25, className = '' }) {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" strokeWidth={strokeWidth}
+             strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="M5 12h14" />
+          <path d="m12 5 7 7-7 7" />
+        </svg>
+      );
+    }
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      const [activeIndex, setActiveIndex] = useState(0);
+      const [isAnimating, setIsAnimating] = useState(false);
+      const [isMobile, setIsMobile] = useState(
+        typeof window !== 'undefined' && window.innerWidth < 640
+      );
+
+      // Preload all 4 images on mount
+      useEffect(() => {
+        IMAGES.forEach((img) => {
+          const i = new Image();
+          i.src = img.src;
+        });
+      }, []);
+
+      // Track viewport for isMobile
+      useEffect(() => {
+        const onResize = () => setIsMobile(window.innerWidth < 640);
+        onResize();
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+      }, []);
+
+      const navigate = (dir) => {
+        if (isAnimating) return;
+        setIsAnimating(true);
+        setActiveIndex((prev) =>
+          dir === 'next' ? (prev + 1) % 4 : (prev + 3) % 4
+        );
+        setTimeout(() => setIsAnimating(false), ANIM_MS);
+      };
+
+      // Role for each image based on activeIndex
+      const roleOf = (i) => {
+        if (i === activeIndex) return 'center';
+        if (i === (activeIndex + 3) % 4) return 'left';
+        if (i === (activeIndex + 1) % 4) return 'right';
+        return 'back'; // (activeIndex + 2) % 4
+      };
+
+      const styleFor = (role) => {
+        const base = {
+          position: 'absolute',
+          aspectRatio: '0.6 / 1',
+          transition:
+            `transform ${ANIM_MS}ms ${EASE}, ` +
+            `filter ${ANIM_MS}ms ${EASE}, ` +
+            `opacity ${ANIM_MS}ms ${EASE}, ` +
+            `left ${ANIM_MS}ms ${EASE}, ` +
+            `bottom ${ANIM_MS}ms ${EASE}, ` +
+            `height ${ANIM_MS}ms ${EASE}`,
+          willChange: 'transform, filter, opacity',
+        };
+
+        if (role === 'center') {
+          return {
+            ...base,
+            left: '50%',
+            bottom: isMobile ? '22%' : 0,
+            height: isMobile ? '60%' : '92%',
+            transform: `translateX(-50%) scale(${isMobile ? 1.25 : 1.68})`,
+            filter: 'blur(0px)',
+            opacity: 1,
+            zIndex: 20,
+          };
+        }
+        if (role === 'left') {
+          return {
+            ...base,
+            left: isMobile ? '20%' : '30%',
+            bottom: isMobile ? '32%' : '12%',
+            height: isMobile ? '16%' : '28%',
+            transform: 'translateX(-50%) scale(1)',
+            filter: 'blur(2px)',
+            opacity: 0.85,
+            zIndex: 10,
+          };
+        }
+        if (role === 'right') {
+          return {
+            ...base,
+            left: isMobile ? '80%' : '70%',
+            bottom: isMobile ? '32%' : '12%',
+            height: isMobile ? '16%' : '28%',
+            transform: 'translateX(-50%) scale(1)',
+            filter: 'blur(2px)',
+            opacity: 0.85,
+            zIndex: 10,
+          };
+        }
+        // back
+        return {
+          ...base,
+          left: '50%',
+          bottom: isMobile ? '32%' : '12%',
+          height: isMobile ? '13%' : '22%',
+          transform: 'translateX(-50%) scale(1)',
+          filter: 'blur(4px)',
+          opacity: 1,
+          zIndex: 5,
+        };
+      };
+
+      return (
+        <div
+          className="relative w-full overflow-hidden"
+          style={{
+            backgroundColor: IMAGES[activeIndex].bg,
+            transition: `background-color ${ANIM_MS}ms ${EASE}`,
+            fontFamily: "'Inter', sans-serif",
+          }}
+        >
+          <div className="relative w-full" style={{ height: '100vh', overflow: 'hidden' }}>
+            {/* Grain overlay */}
+            <div className="grain absolute inset-0 pointer-events-none" style={{ zIndex: 50 }} />
+
+            {/* Giant ghost text "3D SHAPE" */}
+            <div
+              className="absolute inset-x-0 flex items-center justify-center pointer-events-none select-none"
+              style={{ zIndex: 2, top: '18%' }}
+            >
+              <span
+                style={{
+                  fontFamily: "'Anton', sans-serif",
+                  fontSize: 'clamp(90px, 28vw, 380px)',
+                  fontWeight: 900,
+                  color: '#ffffff',
+                  opacity: 1,
+                  lineHeight: 1,
+                  textTransform: 'uppercase',
+                  letterSpacing: '-0.02em',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                3D SHAPE
+              </span>
+            </div>
+
+            {/* Top-left brand */}
+            <div
+              className="absolute top-6 left-4 sm:left-8"
+              style={{ zIndex: 60 }}
+            >
+              <span
+                className="text-xs font-semibold uppercase"
+                style={{ color: '#fff', opacity: 0.9, letterSpacing: '0.18em' }}
+              >
+                TOONHUB
+              </span>
+            </div>
+
+            {/* Carousel */}
+            <div className="absolute inset-0" style={{ zIndex: 3 }}>
+              {IMAGES.map((img, i) => {
+                const role = roleOf(i);
+                return (
+                  <div key={i} style={styleFor(role)}>
+                    <img
+                      src={img.src}
+                      alt=""
+                      draggable={false}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                        objectPosition: 'bottom center',
+                        pointerEvents: 'none',
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Bottom-left: text + nav */}
+            <div
+              className="absolute bottom-6 left-4 sm:bottom-20 sm:left-24"
+              style={{ zIndex: 60, maxWidth: 320 }}
+            >
+              <p
+                className="font-bold uppercase tracking-widest mb-2 sm:mb-3 text-base sm:text-[22px]"
+                style={{ color: '#fff', opacity: 0.95, letterSpacing: '0.02em' }}
+              >
+                TOONHUB FIGURINES
+              </p>
+              <p
+                className="hidden sm:block text-xs sm:text-sm mb-4 sm:mb-5"
+                style={{ color: '#fff', opacity: 0.85, lineHeight: 1.6 }}
+              >
+                The artwork is stunning, shipped fully prepared. The finish is a vision,
+                the 3D craft is flawless. Many thanks! Wishing you the win. Order now.
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => navigate('prev')}
+                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-white"
+                  style={{
+                    border: '2px solid #fff',
+                    backgroundColor: 'transparent',
+                    transition: 'transform 150ms, background-color 150ms',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)';
+                    e.currentTarget.style.transform = 'scale(1.08)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                  aria-label="Previous"
+                >
+                  <ArrowLeft size={26} strokeWidth={2.25} />
+                </button>
+                <button
+                  onClick={() => navigate('next')}
+                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-white"
+                  style={{
+                    border: '2px solid #fff',
+                    backgroundColor: 'transparent',
+                    transition: 'transform 150ms, background-color 150ms',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)';
+                    e.currentTarget.style.transform = 'scale(1.08)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                  aria-label="Next"
+                >
+                  <ArrowRight size={26} strokeWidth={2.25} />
+                </button>
+              </div>
+            </div>
+
+            {/* Bottom-right: DISCOVER IT link */}
+            <div
+              className="absolute bottom-6 right-4 sm:bottom-20 sm:right-10"
+              style={{ zIndex: 60 }}
+            >
+              <a
+                href="#"
+                className="flex items-center gap-2"
+                style={{
+                  fontFamily: "'Anton', sans-serif",
+                  fontSize: 'clamp(20px, 4vw, 56px)',
+                  fontWeight: 400,
+                  color: '#fff',
+                  opacity: 0.95,
+                  textDecoration: 'none',
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1,
+                  textTransform: 'uppercase',
+                  transition: 'opacity 200ms',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = 0.95; }}
+              >
+                DISCOVER IT
+                <ArrowRight className="w-5 h-5 sm:w-8 sm:h-8" strokeWidth={2.25} />
+              </a>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

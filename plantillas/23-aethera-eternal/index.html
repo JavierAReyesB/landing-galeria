@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aethera — Beyond silence, we build the eternal.</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-22) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- Fonts: Instrument Serif (italic + roman) + Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    html, body { background: #fff; color: #000; }
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Animations */
+    @keyframes fade-rise {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-rise         { animation: fade-rise 0.8s ease-out      both; }
+    .animate-fade-rise-delay   { animation: fade-rise 0.8s ease-out 0.2s both; }
+    .animate-fade-rise-delay-2 { animation: fade-rise 0.8s ease-out 0.4s both; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useRef } = React;
+
+    const VIDEO_SRC = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_083109_283f3553-e28f-428b-a723-d639c617eb2b.mp4';
+
+    const NAV_LINKS = [
+      { label: 'Home',     active: true  },
+      { label: 'Studio',   active: false },
+      { label: 'About',    active: false },
+      { label: 'Journal',  active: false },
+      { label: 'Reach Us', active: false },
+    ];
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      const videoRef = useRef(null);
+
+      // Manual fade-loop via requestAnimationFrame
+      useEffect(() => {
+        const v = videoRef.current;
+        if (!v) return;
+        let rafId = null;
+        let resetting = false;
+
+        const tick = () => {
+          if (!v) return;
+          const { currentTime, duration } = v;
+          if (isFinite(duration) && duration > 0) {
+            const FADE = 0.5;
+            let op = 1;
+            if (currentTime < FADE) {
+              op = currentTime / FADE;
+            } else if (currentTime > duration - FADE) {
+              op = Math.max(0, (duration - currentTime) / FADE);
+            }
+            v.style.opacity = String(op);
+          }
+          rafId = requestAnimationFrame(tick);
+        };
+
+        const onEnded = () => {
+          if (resetting) return;
+          resetting = true;
+          v.style.opacity = '0';
+          setTimeout(() => {
+            v.currentTime = 0;
+            v.play().catch(() => {});
+            resetting = false;
+          }, 100);
+        };
+
+        v.addEventListener('ended', onEnded);
+        v.play().catch(() => {});
+        rafId = requestAnimationFrame(tick);
+
+        return () => {
+          if (rafId) cancelAnimationFrame(rafId);
+          v.removeEventListener('ended', onEnded);
+        };
+      }, []);
+
+      return (
+        <div className="relative min-h-screen w-full overflow-hidden bg-white">
+          {/* Background video layer */}
+          <div className="absolute" style={{ top: '300px', inset: 'auto 0 0 0', zIndex: 0 }}>
+            <video
+              ref={videoRef}
+              src={VIDEO_SRC}
+              autoPlay
+              muted
+              playsInline
+              preload="auto"
+              className="w-full h-auto"
+              style={{ opacity: 0 }}
+            />
+          </div>
+
+          {/* Gradient overlays */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(to bottom, #ffffff, transparent 40%, transparent 60%, #ffffff)',
+              zIndex: 1,
+            }}
+          />
+
+          {/* Foreground */}
+          <div className="relative z-10">
+            {/* Navbar */}
+            <nav className="max-w-7xl mx-auto flex flex-row items-center justify-between px-8 py-6">
+              <a
+                href="#"
+                className="text-3xl tracking-tight leading-none"
+                style={{ fontFamily: "'Instrument Serif', serif", color: '#000000' }}
+              >
+                Aethera<sup className="text-xs">®</sup>
+              </a>
+
+              <div className="hidden md:flex items-center gap-8">
+                {NAV_LINKS.map((l) => (
+                  <a
+                    key={l.label}
+                    href="#"
+                    className="text-sm transition-colors hover:text-black"
+                    style={{ color: l.active ? '#000000' : '#6F6F6F' }}
+                  >
+                    {l.label}
+                  </a>
+                ))}
+              </div>
+
+              <a
+                href="#"
+                className="rounded-full px-6 py-2.5 text-sm transition-transform hover:scale-[1.03]"
+                style={{ backgroundColor: '#000000', color: '#FFFFFF' }}
+              >
+                Begin Journey
+              </a>
+            </nav>
+
+            {/* Hero */}
+            <section
+              className="flex flex-col items-center justify-center text-center px-6 pb-40"
+              style={{ paddingTop: 'calc(8rem - 75px)' }}
+            >
+              <h1
+                className="animate-fade-rise text-5xl sm:text-7xl md:text-8xl max-w-7xl font-normal"
+                style={{
+                  fontFamily: "'Instrument Serif', serif",
+                  lineHeight: 0.95,
+                  letterSpacing: '-2.46px',
+                  color: '#000000',
+                }}
+              >
+                Beyond{' '}
+                <em style={{ color: '#6F6F6F' }}>silence,</em>{' '}
+                we build{' '}
+                <em style={{ color: '#6F6F6F' }}>the eternal.</em>
+              </h1>
+
+              <p
+                className="animate-fade-rise-delay text-base sm:text-lg max-w-2xl mt-8 leading-relaxed"
+                style={{ color: '#6F6F6F' }}
+              >
+                Building platforms for brilliant minds, fearless makers, and thoughtful
+                souls. Through the noise, we craft digital havens for deep work and pure
+                flows.
+              </p>
+
+              <a
+                href="#"
+                className="animate-fade-rise-delay-2 rounded-full px-14 py-5 text-base mt-12 transition-transform hover:scale-[1.03] cursor-pointer"
+                style={{ backgroundColor: '#000000', color: '#FFFFFF' }}
+              >
+                Begin Journey
+              </a>
+            </section>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

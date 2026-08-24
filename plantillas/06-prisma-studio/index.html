@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prisma — Visual arts collective</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-05) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- Framer Motion (UMD exposes window.Motion) -->
+  <script src="https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js"></script>
+
+  <!-- Google Fonts: Almarai (300/400/700/800) + Instrument Serif italic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&family=Instrument+Serif:ital@1&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind config: extend primary color + Instrument Serif fontFamily -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#DEDBC8',
+          },
+          fontFamily: {
+            serif: ['"Instrument Serif"', 'serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    * {
+      font-family: 'Almarai', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+        'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    }
+    html, body { background: #000; color: #E1E0CC; }
+
+    /* SVG noise textures */
+    .noise-overlay {
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    .bg-noise {
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+  </style>
+</head>
+<body class="bg-black text-primary">
+  <div id="root"></div>
+
+  <!-- Suppress benign Framer Motion list-key warnings -->
+  <script>
+    (function () {
+      const _err = console.error;
+      console.error = function (...args) {
+        const msg = args[0];
+        if (typeof msg === 'string' && msg.includes('unique "key" prop')) return;
+        _err.apply(console, args);
+      };
+    })();
+  </script>
+
+  <script type="text/babel">
+    const { useEffect, useRef, useState } = React;
+    const { motion, useInView, useScroll, useTransform } = window.Motion;
+
+    // ───── Asset URLs ─────
+    const HERO_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4';
+    const CARD1_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260406_133058_0504132a-0cf3-4450-a370-8ea3b05c95d4.mp4';
+    const ICON_2 = 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260405_171918_4a5edc79-d78f-4637-ac8b-53c43c220606.png&w=1280&q=85';
+    const ICON_3 = 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260405_171741_ed9845ab-f5b2-4018-8ce7-07cc01823522.png&w=1280&q=85';
+    const ICON_4 = 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260405_171809_f56666dc-c099-4778-ad82-9ad4f209567b.png&w=1280&q=85';
+
+    // ───── Lucide icons (inline) ─────
+    const lucideBase = {
+      width: 24, height: 24, viewBox: '0 0 24 24',
+      fill: 'none', stroke: 'currentColor',
+      strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round',
+    };
+    function ArrowRight({ size = 24, className = '', style }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} className={className} style={style}>
+          <path d="M5 12h14" />
+          <path d="m12 5 7 7-7 7" />
+        </svg>
+      );
+    }
+    function Check({ size = 24, className = '', style }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} className={className} style={style}>
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      );
+    }
+
+    // ───── WordsPullUp ─────
+    function WordsPullUp({ text, className, style, showAsterisk = false, wordMargin = '0.15em' }) {
+      const ref = useRef(null);
+      const inView = useInView(ref, { once: true });
+      const words = text.split(' ');
+      return (
+        <div ref={ref} className={className} style={style}>
+          {words.map((word, i) => {
+            const isLast = i === words.length - 1;
+            return (
+              <motion.span
+                key={i}
+                initial={{ y: 20, opacity: 0 }}
+                animate={inView ? { y: 0, opacity: 1 } : {}}
+                transition={{ delay: i * 0.08, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                style={{
+                  display: 'inline-block',
+                  marginRight: wordMargin,
+                  position: 'relative',
+                }}
+              >
+                {word}
+                {isLast && showAsterisk && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '0.65em',
+                      right: '-0.3em',
+                      fontSize: '0.31em',
+                    }}
+                  >
+                    *
+                  </span>
+                )}
+              </motion.span>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // ───── WordsPullUpMultiStyle ─────
+    function WordsPullUpMultiStyle({ segments, className, style }) {
+      const ref = useRef(null);
+      const inView = useInView(ref, { once: true });
+
+      // Flatten segments into a single array of {word, className}
+      const allWords = [];
+      segments.forEach((seg) => {
+        const words = seg.text.split(' ').filter((w) => w.length > 0);
+        words.forEach((w) => allWords.push({ word: w, className: seg.className }));
+      });
+
+      return (
+        <div
+          ref={ref}
+          className={`inline-flex flex-wrap justify-center ${className || ''}`}
+          style={style}
+        >
+          {allWords.map((item, i) => (
+            <motion.span
+              key={i}
+              className={item.className}
+              initial={{ y: 20, opacity: 0 }}
+              animate={inView ? { y: 0, opacity: 1 } : {}}
+              transition={{ delay: i * 0.08, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              style={{ display: 'inline-block', marginRight: '0.22em' }}
+            >
+              {item.word}
+            </motion.span>
+          ))}
+        </div>
+      );
+    }
+
+    // ───── AnimatedLetter + ScrollText ─────
+    function AnimatedLetter({ char, start, end, scrollYProgress }) {
+      const opacity = useTransform(scrollYProgress, [start, end], [0.2, 1]);
+      return <motion.span style={{ opacity }}>{char === ' ' ? ' ' : char}</motion.span>;
+    }
+
+    function ScrollText({ text, className, style }) {
+      const ref = useRef(null);
+      const { scrollYProgress } = useScroll({
+        target: ref,
+        offset: ['start 0.8', 'end 0.2'],
+      });
+      const chars = text.split('');
+      const total = chars.length;
+      return (
+        <p ref={ref} className={className} style={style}>
+          {chars.map((c, i) => {
+            const charProgress = i / total;
+            return (
+              <AnimatedLetter
+                key={i}
+                char={c}
+                start={charProgress - 0.1}
+                end={charProgress + 0.05}
+                scrollYProgress={scrollYProgress}
+              />
+            );
+          })}
+        </p>
+      );
+    }
+
+    // ═════════════════════════ HERO ═════════════════════════
+    function Hero() {
+      const navLinks = ['Our story', 'Collective', 'Workshops', 'Programs', 'Inquiries'];
+      const [hover, setHover] = useState(null);
+
+      return (
+        <section className="h-screen p-4 md:p-6">
+          <div className="relative w-full h-full rounded-2xl md:rounded-[2rem] overflow-hidden bg-black">
+            {/* Background video */}
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            >
+              <source src={HERO_VIDEO} type="video/mp4" />
+            </video>
+
+            {/* Noise overlay */}
+            <div className="absolute inset-0 noise-overlay opacity-[0.7] mix-blend-overlay pointer-events-none" />
+
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60 pointer-events-none" />
+
+            {/* Navbar */}
+            <nav className="absolute top-0 left-1/2 -translate-x-1/2 bg-black rounded-b-2xl md:rounded-b-3xl px-4 py-2 md:px-8 z-20">
+              <ul className="flex items-center gap-3 sm:gap-6 md:gap-12 lg:gap-14">
+                {navLinks.map((label) => (
+                  <li key={label}>
+                    <a
+                      href="#"
+                      className="text-[10px] sm:text-xs md:text-sm transition-colors"
+                      style={{
+                        color: hover === label ? '#E1E0CC' : 'rgba(225, 224, 204, 0.8)',
+                      }}
+                      onMouseEnter={() => setHover(label)}
+                      onMouseLeave={() => setHover(null)}
+                    >
+                      {label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            {/* Hero content */}
+            <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-6 md:px-10 pb-4 sm:pb-6 md:pb-10">
+              <div className="grid grid-cols-12 gap-4 md:gap-6 items-end">
+                {/* Heading 8 cols */}
+                <div className="col-span-12 lg:col-span-8 relative">
+                  <WordsPullUp
+                    text="Prisma"
+                    showAsterisk={true}
+                    className="text-[26vw] sm:text-[24vw] md:text-[22vw] lg:text-[20vw] xl:text-[19vw] 2xl:text-[20vw] font-medium leading-[0.85] tracking-[-0.07em]"
+                    style={{ color: '#E1E0CC' }}
+                    wordMargin="0"
+                  />
+                </div>
+
+                {/* Right column 4 cols */}
+                <div className="col-span-12 lg:col-span-4 flex flex-col gap-4 md:gap-5 pb-2 md:pb-6">
+                  <motion.p
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="text-primary/70 text-xs sm:text-sm md:text-base"
+                    style={{ lineHeight: 1.2 }}
+                  >
+                    Prisma is a worldwide network of visual artists, filmmakers and
+                    storytellers bound not by place, status or labels but by passion and
+                    hunger to unlock potential through our unique perspectives.
+                  </motion.p>
+
+                  <motion.a
+                    href="#"
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.7, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="group inline-flex items-center gap-2 hover:gap-3 transition-all bg-primary rounded-full pl-5 pr-1.5 py-1.5 text-black font-medium text-sm sm:text-base self-start"
+                  >
+                    Join the lab
+                    <span className="bg-black rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-transform group-hover:scale-110">
+                      <ArrowRight size={16} style={{ color: '#E1E0CC' }} />
+                    </span>
+                  </motion.a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // ═════════════════════════ ABOUT ═════════════════════════
+    function About() {
+      return (
+        <section className="bg-black px-4 md:px-6 py-20 md:py-32">
+          <div className="bg-[#101010] max-w-6xl mx-auto rounded-2xl md:rounded-[2rem] px-6 sm:px-10 md:px-16 py-16 md:py-24 text-center">
+            <p className="text-primary text-[10px] sm:text-xs mb-6 md:mb-10 tracking-wider uppercase">
+              Visual arts
+            </p>
+
+            <WordsPullUpMultiStyle
+              segments={[
+                { text: 'I am Marcus Chen,', className: 'font-normal' },
+                { text: 'a self-taught director.', className: 'italic font-serif' },
+                {
+                  text:
+                    'I have skills in color grading, visual effects, and narrative design.',
+                  className: 'font-normal',
+                },
+              ]}
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl max-w-3xl mx-auto leading-[0.95] sm:leading-[0.9]"
+              style={{ color: '#E1E0CC' }}
+            />
+
+            <div className="mt-10 md:mt-16 max-w-2xl mx-auto">
+              <ScrollText
+                text="Over the last seven years, I have worked with Parallax, a Berlin-based production house that crafts cinema, series, and Noir Studio in Paris. Together, we have created work that has earned international acclaim at several major festivals."
+                className="text-xs sm:text-sm md:text-base leading-relaxed"
+                style={{ color: '#DEDBC8' }}
+              />
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // ═════════════════════════ FEATURES ═════════════════════════
+    function FeatureCard({ children, index, className, style }) {
+      const ref = useRef(null);
+      const inView = useInView(ref, { once: true, margin: '-100px' });
+      return (
+        <motion.div
+          ref={ref}
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={inView ? { scale: 1, opacity: 1 } : {}}
+          transition={{ delay: index * 0.15, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className={className}
+          style={style}
+        >
+          {children}
+        </motion.div>
+      );
+    }
+
+    function ChecklistCard({ index, iconSrc, number, title, items }) {
+      return (
+        <div className="bg-[#212121] rounded-2xl p-5 sm:p-6 flex flex-col h-full">
+          <img
+            src={iconSrc}
+            alt=""
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover"
+          />
+          <div className="mt-6 flex items-baseline gap-2">
+            <span className="text-primary/60 text-xs">{number}</span>
+            <h3 className="text-primary text-lg sm:text-xl font-medium">{title}</h3>
+          </div>
+
+          <ul className="mt-4 sm:mt-6 flex flex-col gap-2.5 sm:gap-3">
+            {items.map((item) => (
+              <li key={item} className="flex items-start gap-2 text-gray-400 text-xs sm:text-sm">
+                <Check size={14} className="mt-0.5 flex-shrink-0" style={{ color: '#DEDBC8' }} />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+
+          <a
+            href="#"
+            className="mt-auto pt-6 inline-flex items-center gap-2 text-primary text-xs sm:text-sm"
+          >
+            Learn more
+            <ArrowRight size={14} style={{ transform: 'rotate(-45deg)' }} />
+          </a>
+        </div>
+      );
+    }
+
+    function Features() {
+      return (
+        <section className="relative min-h-screen bg-black px-4 md:px-6 pt-20 md:pt-32 pb-20 md:pb-32 overflow-hidden">
+          {/* Subtle noise */}
+          <div className="absolute inset-0 bg-noise opacity-[0.15] pointer-events-none" />
+
+          <div className="relative z-10 max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="text-center mb-12 md:mb-20">
+              <WordsPullUpMultiStyle
+                segments={[
+                  {
+                    text: 'Studio-grade workflows for visionary creators.',
+                    className: 'text-primary',
+                  },
+                ]}
+                className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-normal"
+              />
+              <div className="mt-2">
+                <WordsPullUpMultiStyle
+                  segments={[
+                    {
+                      text: 'Built for pure vision. Powered by art.',
+                      className: 'text-gray-500',
+                    },
+                  ]}
+                  className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-normal"
+                />
+              </div>
+            </div>
+
+            {/* 4-column grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-2 md:gap-1 lg:h-[480px]">
+              {/* Card 1 — Video */}
+              <FeatureCard
+                index={0}
+                className="relative rounded-2xl overflow-hidden bg-black h-[280px] sm:h-[320px] lg:h-full"
+              >
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover"
+                >
+                  <source src={CARD1_VIDEO} type="video/mp4" />
+                </video>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute bottom-5 left-5 right-5">
+                  <p
+                    className="text-base sm:text-lg font-medium"
+                    style={{ color: '#E1E0CC' }}
+                  >
+                    Your creative canvas.
+                  </p>
+                </div>
+              </FeatureCard>
+
+              {/* Card 2 */}
+              <FeatureCard index={1} className="h-[320px] sm:h-[360px] lg:h-full">
+                <ChecklistCard
+                  index={1}
+                  iconSrc={ICON_2}
+                  number="01"
+                  title="Project Storyboard."
+                  items={[
+                    'Scene-by-scene breakdown panels',
+                    'Real-time team collaboration',
+                    'Version history with snapshots',
+                    'Export to industry-standard formats',
+                  ]}
+                />
+              </FeatureCard>
+
+              {/* Card 3 */}
+              <FeatureCard index={2} className="h-[320px] sm:h-[360px] lg:h-full">
+                <ChecklistCard
+                  index={2}
+                  iconSrc={ICON_3}
+                  number="02"
+                  title="Smart Critiques."
+                  items={[
+                    'AI-powered shot and pacing analysis',
+                    'Director-grade creative notes',
+                    'One-click tool integrations',
+                  ]}
+                />
+              </FeatureCard>
+
+              {/* Card 4 */}
+              <FeatureCard index={3} className="h-[320px] sm:h-[360px] lg:h-full">
+                <ChecklistCard
+                  index={3}
+                  iconSrc={ICON_4}
+                  number="03"
+                  title="Immersion Capsule."
+                  items={[
+                    'Silence notifications across devices',
+                    'Curated ambient soundscapes',
+                    'Schedule syncing with your studio',
+                  ]}
+                />
+              </FeatureCard>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      return (
+        <div className="bg-black text-primary">
+          <Hero />
+          <About />
+          <Features />
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

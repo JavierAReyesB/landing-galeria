@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MicroVisuals</title>
+
+  <!-- Fonts (Instrument Serif + Barlow + Dirtyline) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-07) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- GSAP -->
+  <script src="https://unpkg.com/gsap@3.12.5/dist/gsap.min.js"></script>
+
+  <!-- Tailwind config: fontFamily + borderRadius -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            heading:   ["'Instrument Serif'", "serif"],
+            body:      ["'Barlow'", "sans-serif"],
+            dirtyline: ["'Dirtyline'", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: '9999px',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    @font-face {
+      font-family: 'Dirtyline';
+      src: url('https://fonts.cdnfonts.com/s/15011/Dirtyline36DaysofType.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+    html, body { background: #000; color: #fff; }
+    body { font-family: 'Barlow', sans-serif; }
+
+    /* Liquid Glass — subtle */
+    .liquid-glass {
+      background: rgba(255,255,255,0.01);
+      background-blend-mode: luminosity;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: none;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    .liquid-glass::before {
+      content: "";
+      position: absolute; inset: 0;
+      border-radius: inherit;
+      padding: 1.4px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.45) 0%,
+        rgba(255,255,255,0.15) 20%,
+        rgba(255,255,255,0)    40%,
+        rgba(255,255,255,0)    60%,
+        rgba(255,255,255,0.15) 80%,
+        rgba(255,255,255,0.45) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* Liquid Glass — strong (heavier blur) */
+    .liquid-glass-strong {
+      background: rgba(255,255,255,0.01);
+      background-blend-mode: luminosity;
+      backdrop-filter: blur(50px);
+      -webkit-backdrop-filter: blur(50px);
+      border: none;
+      box-shadow: 4px 4px 4px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.15);
+      position: relative;
+      overflow: hidden;
+    }
+    .liquid-glass-strong::before {
+      content: "";
+      position: absolute; inset: 0;
+      border-radius: inherit;
+      padding: 1.4px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.5) 0%,
+        rgba(255,255,255,0.2) 20%,
+        rgba(255,255,255,0)   40%,
+        rgba(255,255,255,0)   60%,
+        rgba(255,255,255,0.2) 80%,
+        rgba(255,255,255,0.5) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .hero-title {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: clamp(96px, 18vw, 280px);
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+      color: white;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useRef, useState } = React;
+
+    const NAV_LINKS = ['Gallery', 'Styles', 'API', 'Pricing', 'Blog'];
+
+    // Resolve video relative to the HTML, regardless of trailing slash
+    const VIDEO_SRC = (() => {
+      let p = location.pathname;
+      if (p.endsWith('.html')) p = p.replace(/[^/]+$/, '');
+      else if (!p.endsWith('/')) p += '/';
+      return p + 'boomerang.mp4';
+    })();
+
+    // ───── LogoMark ─────
+    function LogoMark() {
+      return (
+        <svg width="44" height="26" viewBox="0 0 44 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0"  y="3" width="14" height="20" rx="3" fill="#ffffff" />
+          <rect x="16" y="3" width="12" height="20" rx="3" fill="#ffffff" />
+          <rect x="30" y="3" width="14" height="20" rx="3" fill="#ffffff" />
+        </svg>
+      );
+    }
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      const [mounted, setMounted] = useState(false);
+      const [framesReady, setFramesReady] = useState(false);
+
+      const videoRef         = useRef(null);
+      const videoBgRef       = useRef(null);
+      const displayCanvasRef = useRef(null);
+      const framesRef        = useRef([]);
+
+      // Mount fade-in
+      useEffect(() => {
+        const t = setTimeout(() => setMounted(true), 50);
+        return () => clearTimeout(t);
+      }, []);
+
+      // Effect 1 — Frame capture (boomerang setup)
+      useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        let capturing = true;
+        let lastTime  = -1;
+        let rafId     = null;
+        const MAX_WIDTH = 960;
+        const frames = [];
+
+        const captureFrame = () => {
+          if (!capturing) return;
+          if (video.readyState < 2) return scheduleNext();
+          if (video.currentTime === lastTime) return scheduleNext();
+          lastTime = video.currentTime;
+
+          const scale = Math.min(1, MAX_WIDTH / video.videoWidth);
+          const w = Math.round(video.videoWidth  * scale);
+          const h = Math.round(video.videoHeight * scale);
+
+          const off = document.createElement('canvas');
+          off.width  = w;
+          off.height = h;
+          off.getContext('2d').drawImage(video, 0, 0, w, h);
+          frames.push(off);
+          scheduleNext();
+        };
+
+        const scheduleNext = () => {
+          if (!capturing) return;
+          if ('requestVideoFrameCallback' in video) {
+            video.requestVideoFrameCallback(captureFrame);
+          } else {
+            rafId = requestAnimationFrame(captureFrame);
+          }
+        };
+
+        const onLoaded = () => {
+          video.play().catch(() => {});
+          scheduleNext();
+        };
+
+        const onEnded = () => {
+          capturing = false;
+          framesRef.current = frames;
+          setFramesReady(true);
+        };
+
+        video.addEventListener('loadedmetadata', onLoaded);
+        video.addEventListener('ended', onEnded);
+        if (video.readyState >= 1) onLoaded();
+
+        return () => {
+          capturing = false;
+          if (rafId) cancelAnimationFrame(rafId);
+          video.removeEventListener('loadedmetadata', onLoaded);
+          video.removeEventListener('ended', onEnded);
+        };
+      }, []);
+
+      // Effect 2 — Boomerang render
+      useEffect(() => {
+        if (!framesReady) return;
+        const frames = framesRef.current;
+        if (!frames.length) return;
+
+        const canvas = displayCanvasRef.current;
+        if (!canvas) return;
+        canvas.width  = frames[0].width;
+        canvas.height = frames[0].height;
+        const ctx = canvas.getContext('2d');
+
+        let index = 0;
+        let direction = 1;
+        let last = performance.now();
+        const interval = 1000 / 30;
+        let rafId = null;
+
+        const render = (now) => {
+          if (now - last >= interval) {
+            last = now;
+            ctx.drawImage(frames[index], 0, 0);
+            index += direction;
+            if (index >= frames.length - 1) { index = frames.length - 1; direction = -1; }
+            else if (index <= 0)            { index = 0;                  direction =  1; }
+          }
+          rafId = requestAnimationFrame(render);
+        };
+        rafId = requestAnimationFrame(render);
+
+        return () => { if (rafId) cancelAnimationFrame(rafId); };
+      }, [framesReady]);
+
+      // Effect 3 — Parallax mouse tracking (gsap)
+      useEffect(() => {
+        const gsap = window.gsap;
+        if (!gsap) return;
+
+        const strength = 20;
+        let targetX = 0, targetY = 0;
+        let currentX = 0, currentY = 0;
+        let rafId = null;
+
+        const onMove = (e) => {
+          const cx = window.innerWidth  / 2;
+          const cy = window.innerHeight / 2;
+          targetX = ((e.clientX - cx) / cx) * strength;
+          targetY = ((e.clientY - cy) / cy) * strength;
+        };
+
+        const tick = () => {
+          currentX += (targetX - currentX) * 0.06;
+          currentY += (targetY - currentY) * 0.06;
+          if (videoBgRef.current) {
+            gsap.set(videoBgRef.current, { x: currentX, y: currentY });
+          }
+          rafId = requestAnimationFrame(tick);
+        };
+
+        window.addEventListener('mousemove', onMove);
+        rafId = requestAnimationFrame(tick);
+
+        return () => {
+          window.removeEventListener('mousemove', onMove);
+          if (rafId) cancelAnimationFrame(rafId);
+        };
+      }, []);
+
+      return (
+        <div className="min-h-screen bg-black text-white font-body overflow-x-hidden">
+          {/* 1. Video background layer */}
+          <div
+            ref={videoBgRef}
+            className="fixed top-0 left-0 w-full h-full z-0 scale-[1.08] origin-center"
+          >
+            <video
+              ref={videoRef}
+              src={VIDEO_SRC}
+              muted
+              playsInline
+              preload="auto"
+              crossOrigin="anonymous"
+              className="w-full h-full object-cover"
+              style={{ display: framesReady ? 'none' : 'block' }}
+            />
+            <canvas
+              ref={displayCanvasRef}
+              className="w-full h-full object-cover"
+              style={{ display: framesReady ? 'block' : 'none' }}
+            />
+          </div>
+
+          {/* 2. Hero title */}
+          <div
+            className={
+              'fixed left-0 right-0 z-20 w-full px-4 transition-all duration-1000 ' +
+              (mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6')
+            }
+            style={{ top: '126px' }}
+          >
+            <h1 className="hero-title select-none">MicroVisuals</h1>
+          </div>
+
+          {/* 3. Nav */}
+          <nav className="fixed top-5 left-1/2 -translate-x-1/2 z-50 whitespace-nowrap">
+            <div className="liquid-glass flex items-center gap-6 rounded px-4 py-2.5">
+              <LogoMark />
+              <div className="flex items-center gap-5">
+                {NAV_LINKS.map((label) => (
+                  <a
+                    key={label}
+                    href="#"
+                    className="text-sm font-body font-light text-white/70 hover:text-white transition-colors duration-200"
+                  >
+                    {label}
+                  </a>
+                ))}
+              </div>
+              <div className="flex items-center gap-3 ml-4">
+                <a
+                  href="#"
+                  className="text-sm font-body font-light text-white/70 hover:text-white transition-colors duration-200"
+                >
+                  Sign in
+                </a>
+                <a
+                  href="#"
+                  className="liquid-glass-strong text-sm font-body font-medium text-white rounded px-4 py-1.5 transition-all duration-200 hover:scale-[1.04] hover:shadow-[0_0_16px_2px_rgba(255,255,255,0.12)] active:scale-[0.97]"
+                >
+                  Try it free
+                </a>
+              </div>
+            </div>
+          </nav>
+
+          {/* 4. Bottom row */}
+          <div
+            className={
+              'fixed bottom-12 left-0 right-0 px-10 flex items-end justify-between z-20 transition-all duration-1000 delay-300 ' +
+              (mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6')
+            }
+          >
+            {/* Left paragraph */}
+            <p className="text-sm font-body font-light text-white/75 max-w-[220px] leading-relaxed">
+              Forma's AI understands context, composition, and style like a creative director would.
+            </p>
+
+            {/* Center buttons */}
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-0 flex items-center gap-3">
+              <button
+                className="group relative bg-white text-black text-sm font-body font-medium rounded px-6 py-3 overflow-hidden active:scale-[0.97] transition-all duration-200 shadow-[0_0_0_0_rgba(255,255,255,0)] hover:shadow-[0_0_24px_4px_rgba(255,255,255,0.25)] hover:scale-[1.03]"
+              >
+                <span className="relative z-10">Start generating</span>
+                <span className="absolute inset-0 bg-gradient-to-b from-white to-white/85 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              </button>
+              <button
+                className="liquid-glass group text-white text-sm font-body font-medium rounded px-6 py-3 active:scale-[0.97] transition-all duration-200 hover:scale-[1.03] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_0_20px_2px_rgba(255,255,255,0.07)]"
+              >
+                See templates
+              </button>
+            </div>
+
+            {/* Right paragraph */}
+            <p className="text-sm font-body font-light text-white/75 max-w-[220px] leading-relaxed text-right">
+              Describe what you see in your head — get images that actually match.
+            </p>
+          </div>
+
+          {/* Debug — capturing state */}
+          {!framesReady && (
+            <div
+              className="fixed left-1/2 -translate-x-1/2 text-white/40 text-xs z-30 pointer-events-none"
+              style={{ bottom: '200px' }}
+            >
+              Capturing frames…
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

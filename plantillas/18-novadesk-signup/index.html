@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NovaDesk — Sign up</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-17) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <style>
+    html, body { background: #000; color: #fff; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useRef, useState } = React;
+
+    const VIDEO_SRC = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_191911_e7dc783e-a580-4974-8971-9796ecffd3bd.mp4';
+    const BRAND = '#DA3F23';
+
+    // ───── Brand logo ─────
+    function BrandLogo({ size = 36 }) {
+      return (
+        <svg width={size} height={size} viewBox="0 0 256 256" fill="none">
+          <path
+            fill={BRAND}
+            d="M 256 64 L 256 128 L 192.5 128 L 160 95 L 128 64 L 96 95 L 63.5 128 L 64 128 L 128 192 L 128 256 L 64.5 256 L 32 223 L 0 192 L 0 64 L 64 0 L 192 0 Z M 256 192 L 256 256 L 192.5 256 L 160 223 L 128 192 L 128 128 L 192 128 Z"
+          />
+        </svg>
+      );
+    }
+
+    // ───── Lucide icons (inline) ─────
+    const lucideBase = {
+      viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+      strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round',
+    };
+    function Eye({ size = 16, className = '' }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} className={className}>
+          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+      );
+    }
+    function EyeOff({ size = 16, className = '' }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} className={className}>
+          <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+          <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+          <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+          <line x1="2" x2="22" y1="2" y2="22" />
+        </svg>
+      );
+    }
+    function Chrome({ size = 16, className = '' }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} className={className}>
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="12" r="4" />
+          <line x1="21.17" x2="12" y1="8" y2="8" />
+          <line x1="3.95" x2="8.54" y1="6.06" y2="14" />
+          <line x1="10.88" x2="15.46" y1="21.94" y2="14" />
+        </svg>
+      );
+    }
+    function Apple({ size = 16, className = '' }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} className={className}>
+          <path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z" />
+          <path d="M10 2c1 .5 2 2 2 5" />
+        </svg>
+      );
+    }
+    function Twitter({ size = 16, className = '' }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} className={className}>
+          <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
+        </svg>
+      );
+    }
+    function CheckMark({ size = 12 }) {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+             stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      );
+    }
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [agreed, setAgreed] = useState(false);
+      const [showPassword, setShowPassword] = useState(false);
+      const videoRef = useRef(null);
+
+      useEffect(() => {
+        const v = videoRef.current;
+        if (v) v.play().catch(() => {});
+      }, []);
+
+      const onSubmit = (e) => {
+        e.preventDefault();
+      };
+
+      return (
+        <div className="relative min-h-screen w-screen overflow-x-hidden flex items-center justify-center bg-black py-6 sm:py-0 sm:h-screen sm:overflow-hidden">
+          {/* Background video */}
+          <video
+            ref={videoRef}
+            src={VIDEO_SRC}
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ zIndex: 0 }}
+          />
+
+          {/* Centered card */}
+          <div className="relative z-10 max-w-4xl mx-4 rounded-2xl overflow-hidden shadow-2xl flex flex-col sm:flex-row w-full sm:h-[660px]">
+            {/* Left column — form */}
+            <div
+              className="w-full sm:w-1/2 px-6 sm:px-10 py-8 sm:py-10 flex flex-col"
+              style={{ backgroundColor: 'rgba(10, 10, 10, 0.92)' }}
+            >
+              {/* Brand lockup */}
+              <div className="flex items-center gap-2">
+                <BrandLogo size={36} />
+                <span
+                  className="font-semibold tracking-tight text-lg"
+                  style={{ color: BRAND }}
+                >
+                  NovaDesk
+                </span>
+              </div>
+
+              <form
+                onSubmit={onSubmit}
+                className="flex flex-col gap-5 mt-8 sm:mt-auto"
+              >
+                <div>
+                  <h1 className="text-white text-2xl font-semibold tracking-tight">
+                    Sign up
+                  </h1>
+                  <p className="text-zinc-400 text-sm mt-1.5 leading-relaxed">
+                    Set up your profile and jump in right now.
+                  </p>
+                </div>
+
+                <input
+                  type="email"
+                  placeholder="Input Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-zinc-800/70 text-white placeholder-zinc-500 text-sm rounded-lg px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-zinc-500 transition-colors"
+                />
+
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Choose Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-zinc-800/70 text-white placeholder-zinc-500 text-sm rounded-lg px-4 py-2.5 pr-11 focus:outline-none focus:ring-1 focus:ring-zinc-500 transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+
+                {/* Terms checkbox */}
+                <label className="flex items-start gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <span
+                    className={
+                      'flex-shrink-0 w-4 h-4 rounded border flex items-center justify-center transition-colors ' +
+                      (agreed
+                        ? 'bg-white border-white'
+                        : 'border-zinc-600 bg-transparent')
+                    }
+                  >
+                    {agreed && <CheckMark size={12} />}
+                  </span>
+                  <span className="text-zinc-400 text-xs leading-relaxed">
+                    I Agree On The{' '}
+                    <a href="#" className="underline text-zinc-200 hover:text-white">
+                      Rules
+                    </a>{' '}
+                    &{' '}
+                    <a href="#" className="underline text-zinc-200 hover:text-white">
+                      Privacy Notice
+                    </a>
+                  </span>
+                </label>
+
+                <button
+                  type="submit"
+                  className="w-full bg-white text-black text-sm font-semibold rounded-lg py-2.5 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
+                >
+                  Launch Account
+                </button>
+
+                {/* Divider */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-zinc-700/60" />
+                  <span className="text-zinc-500 text-xs">or join us via</span>
+                  <div className="flex-1 h-px bg-zinc-700/60" />
+                </div>
+
+                {/* Social buttons */}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="flex-1 bg-zinc-800/60 rounded-lg py-2 text-zinc-300 text-sm hover:bg-zinc-700/60 hover:text-white transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Chrome size={15} />
+                    Google
+                  </button>
+                  <button
+                    type="button"
+                    className="flex-1 bg-zinc-800/60 rounded-lg py-2 text-zinc-300 text-sm hover:bg-zinc-700/60 hover:text-white transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Apple size={15} />
+                    Apple
+                  </button>
+                  <button
+                    type="button"
+                    className="flex-1 bg-zinc-800/60 rounded-lg py-2 text-zinc-300 text-sm hover:bg-zinc-700/60 hover:text-white transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Twitter size={15} />
+                    Twitter
+                  </button>
+                </div>
+
+                {/* Footer */}
+                <p className="text-zinc-500 text-xs text-center">
+                  Already Hold An Account?{' '}
+                  <a href="#" className="text-zinc-200 hover:text-white font-medium">
+                    Enter
+                  </a>
+                </p>
+              </form>
+            </div>
+
+            {/* Right column — glass panel with logo */}
+            <div
+              className="hidden sm:flex w-1/2 items-center justify-center"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+              }}
+            >
+              <div style={{ marginTop: -70 }}>
+                <BrandLogo size={34} />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

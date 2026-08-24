@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grow — The most powerful AI in talent acquisition</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-21) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- Fonts: Geist (body) + General Sans (display) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind config: theme tokens + marquee animation -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background:       'hsl(var(--background))',
+            foreground:       'hsl(var(--foreground))',
+            card:             'hsl(var(--card))',
+            'card-foreground':'hsl(var(--card-foreground))',
+            primary:          'hsl(var(--primary))',
+            'primary-foreground': 'hsl(var(--primary-foreground))',
+            secondary:        'hsl(var(--secondary))',
+            muted:            'hsl(var(--muted))',
+            'muted-foreground': 'hsl(var(--muted-foreground))',
+            accent:           'hsl(var(--accent))',
+            border:           'hsl(var(--border))',
+            hero: {
+              heading: 'hsl(var(--hero-heading))',
+              sub:     'hsl(var(--hero-sub))',
+            },
+          },
+          keyframes: {
+            marquee: {
+              '0%':   { transform: 'translateX(0%)' },
+              '100%': { transform: 'translateX(-50%)' },
+            },
+          },
+          animation: {
+            marquee: 'marquee 20s linear infinite',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    :root {
+      --background: 260 87% 3%;
+      --foreground: 40 6% 95%;
+      --card: 240 6% 9%;
+      --card-foreground: 40 6% 95%;
+      --popover: 240 6% 9%;
+      --popover-foreground: 40 6% 95%;
+      --primary: 262 83% 58%;
+      --primary-foreground: 0 0% 100%;
+      --secondary: 240 4% 16%;
+      --secondary-foreground: 40 6% 95%;
+      --muted: 240 4% 16%;
+      --muted-foreground: 240 5% 65%;
+      --accent: 262 83% 58%;
+      --accent-foreground: 0 0% 100%;
+      --destructive: 0 84.2% 60.2%;
+      --destructive-foreground: 0 0% 100%;
+      --border: 240 4% 20%;
+      --input: 240 4% 20%;
+      --ring: 262 83% 58%;
+      --radius: 0.75rem;
+      --hero-heading: 40 10% 96%;
+      --hero-sub: 40 6% 82%;
+    }
+
+    html, body { background: hsl(var(--background)); color: hsl(var(--foreground)); }
+    body {
+      font-family: 'Geist', 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Liquid glass utility */
+    .liquid-glass {
+      background: rgba(255, 255, 255, 0.01);
+      background-blend-mode: luminosity;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: none;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    .liquid-glass::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.4px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 20%,
+        rgba(255,255,255,0)    40%, rgba(255,255,255,0)    60%,
+        rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.45) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useRef } = React;
+
+    const VIDEO_SRC = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260308_114720_3dabeb9e-2c39-4907-b747-bc3544e2d5b7.mp4';
+
+    const NAV_ITEMS = [
+      { label: 'Features',  hasChevron: true  },
+      { label: 'Solutions', hasChevron: false },
+      { label: 'Plans',     hasChevron: false },
+      { label: 'Learning',  hasChevron: true  },
+    ];
+
+    const BRANDS = ['Vortex', 'Nimbus', 'Prysma', 'Cirrus', 'Kynder', 'Halcyn'];
+
+    // ───── ChevronDown icon (lucide) ─────
+    function ChevronDown({ size = 14, className = '' }) {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+             className={className}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      );
+    }
+
+    // ───── Logo (placeholder SVG) ─────
+    function Logo({ size = 32 }) {
+      return (
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+          <defs>
+            <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#9B5CFF" />
+              <stop offset="100%" stopColor="#3A7BBF" />
+            </linearGradient>
+          </defs>
+          <rect x="3" y="3" width="26" height="26" rx="7" fill="url(#logoGrad)" />
+          <path d="M11 16h10M11 20h10M11 12h10" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      );
+    }
+
+    // ───── Navbar ─────
+    function Navbar() {
+      return (
+        <>
+          <nav className="w-full py-5 px-8 flex items-center justify-between">
+            {/* Left: Logo */}
+            <Logo size={32} />
+
+            {/* Center: nav items */}
+            <div className="hidden md:flex items-center gap-1">
+              {NAV_ITEMS.map((item) => (
+                <button
+                  key={item.label}
+                  className="flex items-center gap-1 text-foreground/90 text-base px-3 py-2 rounded-md hover:text-foreground hover:bg-white/5 transition-colors"
+                >
+                  {item.label}
+                  {item.hasChevron && <ChevronDown size={14} />}
+                </button>
+              ))}
+            </div>
+
+            {/* Right: Sign Up */}
+            <button className="liquid-glass text-foreground text-sm font-normal rounded-full px-4 py-2 hover:bg-white/5 transition-colors">
+              Sign Up
+            </button>
+          </nav>
+
+          <div className="mt-[3px] w-full h-px bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
+        </>
+      );
+    }
+
+    // ───── Hero ─────
+    function HeroSection() {
+      return (
+        <section className="bg-background relative overflow-hidden">
+          <Navbar />
+
+          <div className="flex flex-col items-center pt-20 px-4">
+            <h1
+              className="bg-clip-text text-transparent text-center"
+              style={{
+                fontFamily: "'General Sans', sans-serif",
+                fontSize: 'clamp(96px, 22vw, 230px)',
+                fontWeight: 400,
+                lineHeight: 1.02,
+                letterSpacing: '-0.024em',
+                backgroundImage: 'linear-gradient(223deg, #E8E8E9 0%, #3A7BBF 104.15%)',
+                WebkitBackgroundClip: 'text',
+                color: 'transparent',
+                margin: 0,
+              }}
+            >
+              Grow
+            </h1>
+
+            <p className="text-hero-sub text-center text-lg leading-8 max-w-md mt-4 opacity-80">
+              The most powerful AI ever deployed<br />
+              in talent acquisition
+            </p>
+
+            <div className="mt-8 mb-[66px]">
+              <button
+                className="liquid-glass text-foreground rounded-full text-base font-normal hover:bg-white/5 transition-colors"
+                style={{ padding: '24px 29px' }}
+              >
+                Schedule a Consult
+              </button>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // ───── Social Proof / Video Section ─────
+    function SocialProofSection() {
+      const videoRef = useRef(null);
+
+      useEffect(() => {
+        const v = videoRef.current;
+        if (!v) return;
+        let rafId = null;
+        let resetting = false;
+
+        const tick = () => {
+          if (!v) return;
+          const { currentTime, duration } = v;
+          if (isFinite(duration) && duration > 0) {
+            const FADE = 0.5;
+            let op = 1;
+            if (currentTime < FADE) {
+              op = currentTime / FADE;
+            } else if (currentTime > duration - FADE) {
+              op = Math.max(0, (duration - currentTime) / FADE);
+            }
+            v.style.opacity = String(op);
+          }
+          rafId = requestAnimationFrame(tick);
+        };
+
+        const onEnded = () => {
+          if (resetting) return;
+          resetting = true;
+          v.style.opacity = '0';
+          setTimeout(() => {
+            v.currentTime = 0;
+            v.play().catch(() => {});
+            resetting = false;
+          }, 100);
+        };
+
+        v.addEventListener('ended', onEnded);
+        v.play().catch(() => {});
+        rafId = requestAnimationFrame(tick);
+
+        return () => {
+          if (rafId) cancelAnimationFrame(rafId);
+          v.removeEventListener('ended', onEnded);
+        };
+      }, []);
+
+      // Duplicated logos for seamless loop
+      const logos = [...BRANDS, ...BRANDS];
+
+      return (
+        <section className="relative w-full overflow-hidden">
+          <video
+            ref={videoRef}
+            src={VIDEO_SRC}
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: 0 }}
+          />
+
+          {/* Gradient overlays */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background pointer-events-none" />
+
+          {/* Content */}
+          <div className="relative z-10 flex flex-col items-center pt-16 pb-24 px-4 gap-20">
+            <div className="h-40" />
+
+            <div className="max-w-5xl w-full flex flex-col md:flex-row items-center gap-10">
+              {/* Left text */}
+              <div className="text-foreground/50 text-sm whitespace-nowrap shrink-0">
+                Relied on by brands<br />
+                across the globe
+              </div>
+
+              {/* Marquee */}
+              <div className="flex-1 overflow-hidden relative">
+                <div className="flex items-center gap-16 animate-marquee whitespace-nowrap" style={{ width: 'max-content' }}>
+                  {logos.map((brand, i) => (
+                    <div key={i} className="flex items-center gap-3 shrink-0">
+                      <div className="liquid-glass w-6 h-6 rounded-lg flex items-center justify-center text-foreground text-xs font-semibold">
+                        {brand[0]}
+                      </div>
+                      <span className="text-base font-semibold text-foreground">{brand}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      return (
+        <>
+          <HeroSection />
+          <SocialProofSection />
+        </>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

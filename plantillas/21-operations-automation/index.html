@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Intelligent Daily Routine Automation</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-20) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- Framer Motion -->
+  <script src="https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js"></script>
+
+  <!-- Fonts: Manrope + Italiana + Marck Script -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Italiana&family=Manrope:wght@400;600&family=Marck+Script&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind config -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            manrope:  ["Manrope", "sans-serif"],
+            italiana: ["Italiana", "serif"],
+            marck:    ["'Marck Script'", "cursive"],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    html, body { height: 100%; background: #000; color: #fff; }
+    body { font-family: 'Manrope', sans-serif; -webkit-font-smoothing: antialiased; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useRef } = React;
+    const { motion, useScroll, useTransform } = window.Motion;
+
+    const HERO_VIDEO   = 'https://res.cloudinary.com/daklr2whx/video/upload/v1778592404/baby-track-video_e968wn.mp4';
+    const BOTTOM_VIDEO = 'https://res.cloudinary.com/daklr2whx/video/upload/v1778602552/track-video_2_s9lp53.mp4';
+    const CLOUD_IMG    = 'https://res.cloudinary.com/daklr2whx/image/upload/v1778597725/cloude_ws7l3z.png';
+
+    // ───── Logo SVG (organic abstract shape) ─────
+    function Logo({ size = 64 }) {
+      return (
+        <svg width={size} height={size} viewBox="0 0 120 120" fill="none">
+          <path
+            fill="#ffffff"
+            d="M60 120C26.8629 120 0 93.1371 0 60V0C22.5654 0 42.2213 12.4569 52.4662 30.8691C38.4788 34.2089 28.0787 46.7902 28.0787 61.8006V63.1443C28.0787 79.9648 41.7146 93.6006 58.5353 93.6006H59.8789L59.8785 61.8006C59.8785 79.3633 74.1159 93.6006 91.6787 93.6006L91.6787 61.8006C91.6787 44.2783 77.5071 30.0661 60 30.0008L60 0H62.5352C94.2722 0 120 25.7279 120 57.4648V60C120 93.1371 93.1371 120 60 120Z"
+          />
+        </svg>
+      );
+    }
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      const containerRef = useRef(null);
+      const { scrollY } = useScroll({ container: containerRef });
+      const cloudYDesktop = useTransform(scrollY, [0, 300], [0, -100]);
+      const cloudYMobile  = useTransform(scrollY, [0, 300], [0, -24]);
+
+      return (
+        <main
+          ref={containerRef}
+          className="h-screen overflow-y-auto overflow-x-hidden bg-black relative"
+          style={{ fontFamily: 'Manrope, sans-serif' }}
+        >
+          {/* ═══════ Section 1 — Video Hero ═══════ */}
+          <section className="relative h-screen w-full flex-shrink-0 overflow-hidden">
+            <video
+              autoPlay loop muted playsInline preload="auto"
+              src={HERO_VIDEO}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ zIndex: 10 }}
+            />
+            <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 30 }} />
+
+            {/* Top-left logo + tagline */}
+            <div
+              className="absolute top-[24px] left-[20px] md:top-[64px] md:left-[64px] pointer-events-auto max-w-[calc(100vw-140px)] md:max-w-none flex flex-row items-center gap-[16px] md:gap-[24px]"
+              style={{ zIndex: 40 }}
+            >
+              <div className="md:hidden"><Logo size={48} /></div>
+              <div className="hidden md:block"><Logo size={64} /></div>
+              <p
+                className="text-white text-[11px] md:text-[16px] w-[112px] md:w-auto leading-[1.2] font-semibold"
+                style={{ letterSpacing: '0.02em' }}
+              >
+                <span className="hidden md:inline">
+                  Effortless Growth<br />Operations. We Handle All Tasks.<br />Stay Calm.
+                </span>
+                <span className="block md:hidden">
+                  Complete Business<br />Automation. We Handle All<br />Tasks. You Relax.
+                </span>
+              </p>
+            </div>
+
+            {/* Left description (desktop only) */}
+            <div
+              className="hidden md:flex absolute left-[64px] mt-[400px] top-0 flex-col gap-[24px] w-full max-w-[320px] text-white text-[14px] font-normal leading-relaxed"
+              style={{ zIndex: 40 }}
+            >
+              <p>
+                Our SaaS platform takes the weight of repetitive operations off your
+                shoulders — orchestrating workflows, scheduling, reminders, and reporting
+                so your team can focus on the work that matters.
+              </p>
+              <p>
+                Built for founders who want fewer dashboards and more time. We integrate
+                with your stack, learn your routines, and quietly run the business in the
+                background.
+              </p>
+            </div>
+
+            {/* Top-right CTA */}
+            <button
+              className="absolute top-[24px] right-[20px] md:top-[64px] md:right-[64px] px-5 py-3 md:px-10 md:py-7 border border-white rounded-[100%] text-white text-[12px] md:text-[18px] uppercase tracking-widest hover:bg-white/10 hover:backdrop-blur-[48px] transition-all duration-300 cursor-pointer bg-black/10 backdrop-blur-sm md:bg-transparent md:backdrop-blur-none"
+              style={{ fontFamily: 'Italiana, serif', zIndex: 40 }}
+            >
+              Get started
+            </button>
+
+            {/* Bottom heading */}
+            <div
+              className="absolute bottom-[32px] left-[20px] right-[20px] md:left-auto md:bottom-[64px] md:right-[64px] md:max-w-[1200px] text-left md:text-right"
+              style={{ zIndex: 40 }}
+            >
+              {/* Mobile-only paragraphs */}
+              <div className="md:hidden flex flex-col gap-[16px] max-w-[280px] text-white text-[12px] font-normal mb-[32px]">
+                <p>
+                  Our SaaS platform takes the weight of repetitive operations off your
+                  shoulders.
+                </p>
+                <p>
+                  Built for founders who want fewer dashboards and more time.
+                </p>
+              </div>
+
+              <h1
+                className="text-white text-[32px] md:text-[96px] leading-[1.1] md:leading-[88px]"
+                style={{ fontFamily: 'Italiana, serif' }}
+              >
+                <span className="hidden md:inline">
+                  Intelligent Daily<br />Routine Automation<br />For Your Business.<br />You Relax
+                </span>
+                <span className="block md:hidden">
+                  Intelligent Daily Routine<br />Automation For Your<br />Business. You Relax
+                </span>
+              </h1>
+            </div>
+          </section>
+
+          {/* ═══════ Section 2 — Red ═══════ */}
+          <section className="relative min-h-screen w-full flex flex-col" style={{ background: '#FF0000', zIndex: 10 }}>
+            {/* Cloud overlays */}
+            <motion.div
+              className="hidden md:block absolute top-0 left-0 w-full pointer-events-none -translate-y-1/2"
+              style={{ y: cloudYDesktop, zIndex: 100 }}
+            >
+              <img
+                src={CLOUD_IMG}
+                referrerPolicy="no-referrer"
+                className="w-full h-auto block"
+                alt=""
+              />
+            </motion.div>
+            <motion.div
+              className="md:hidden absolute top-0 left-0 w-full pointer-events-none -translate-y-1/2"
+              style={{ y: cloudYMobile, zIndex: 100 }}
+            >
+              <img
+                src={CLOUD_IMG}
+                referrerPolicy="no-referrer"
+                className="w-full h-auto block"
+                alt=""
+              />
+            </motion.div>
+
+            {/* Content wrapper */}
+            <div className="flex-1 flex flex-col items-center w-full pt-[100px] md:pt-[400px]">
+              <div className="flex flex-col items-center w-full px-8 text-center max-w-[900px] h-auto md:h-[620px] mx-auto relative" style={{ zIndex: 20 }}>
+                <Logo size={80} />
+
+                <p
+                  className="text-white text-[16px] max-w-[400px] leading-[1.6] mt-8 mb-[40px] uppercase tracking-wider mx-auto"
+                  style={{ height: 100 }}
+                >
+                  We built this platform with a single purpose to eliminate operational
+                  chaos and restore balance to your daily business routine
+                </p>
+
+                <div
+                  className="text-white leading-none mb-[32px]"
+                  style={{ fontFamily: "'Marck Script', cursive", fontSize: 120 }}
+                >
+                  S.P.D
+                </div>
+
+                <div className="mb-[100px] md:mb-24">
+                  <p className="text-white text-[16px] w-[400px] max-w-full font-light mb-[24px] mx-auto">
+                    Our team obsesses over the small details so you don't have to. Each
+                    automation is hand-tuned for your stack and the way your team
+                    actually works.
+                  </p>
+                  <p className="text-white text-[16px] w-[400px] max-w-full font-light mx-auto">
+                    Less context-switching. Fewer manual handoffs. More space to breathe
+                    and build the parts of the business only you can.
+                  </p>
+                </div>
+              </div>
+
+              {/* Bottom video block */}
+              <div className="relative w-full shrink-0">
+                <div
+                  className="absolute top-0 left-0 w-full pointer-events-none"
+                  style={{ height: 100, background: 'linear-gradient(to bottom, #FF0000, transparent)', zIndex: 10 }}
+                />
+                <video
+                  autoPlay loop muted playsInline preload="auto"
+                  src={BOTTOM_VIDEO}
+                  className="w-full h-auto block object-contain"
+                />
+              </div>
+            </div>
+          </section>
+        </main>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

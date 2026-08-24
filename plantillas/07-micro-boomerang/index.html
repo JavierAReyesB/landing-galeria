@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>micro — Organized. So you don't have to be.</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-06) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    *, html, body { font-family: 'Inter', sans-serif; }
+    html, body {
+      background: #0E1114;
+      color: #fff;
+      overflow: hidden;
+    }
+    /* Subtle dotted pattern on outer wrapper */
+    .dotted-bg {
+      background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useRef, useState } = React;
+
+    // Derive folder from location.pathname so the video resolves correctly
+    // whether the URL is /…/index.html, /…/ (trailing slash) or /… (no slash).
+    const VIDEO_SRC = (() => {
+      let p = location.pathname;
+      if (p.endsWith('.html')) p = p.replace(/[^/]+$/, '');
+      else if (!p.endsWith('/')) p += '/';
+      return p + 'boomerang.mp4';
+    })();
+    const PILL_IMG  = 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260507_181851_f7a6e930-087d-4ce3-978d-f982e804b7df.png&w=1280&q=85';
+
+    // ───── Orb component ─────
+    function Orb({ style, color }) {
+      return (
+        <div
+          className="absolute pointer-events-none z-10"
+          style={{
+            ...style,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+            filter: 'blur(20px)',
+            mixBlendMode: 'screen',
+          }}
+        />
+      );
+    }
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      const videoRef    = useRef(null);
+      const canvasRefs  = useRef([null, null, null]);
+      const framesRef   = useRef([]);            // captured frames during forward play
+      const captureCanvasRef = useRef(null);     // reused while pushing per-frame snapshots
+      const [framesReady, setFramesReady] = useState(false);
+      const [frameCount, setFrameCount]   = useState(0);
+
+      // Capture phase: play forward, snapshot every video frame
+      useEffect(() => {
+        const v = videoRef.current;
+        if (!v) return;
+
+        let stopped = false;
+
+        const captureFrame = () => {
+          if (stopped || v.ended) return;
+          if (v.videoWidth === 0) {
+            // not ready yet
+            if ('requestVideoFrameCallback' in v) v.requestVideoFrameCallback(captureFrame);
+            else requestAnimationFrame(captureFrame);
+            return;
+          }
+          const aspect = v.videoWidth / v.videoHeight;
+          const w = Math.min(960, v.videoWidth);
+          const h = Math.round(w / aspect);
+          const off = document.createElement('canvas');
+          off.width  = w;
+          off.height = h;
+          off.getContext('2d').drawImage(v, 0, 0, w, h);
+          framesRef.current.push(off);
+          if ('requestVideoFrameCallback' in v) {
+            v.requestVideoFrameCallback(captureFrame);
+          } else {
+            requestAnimationFrame(captureFrame);
+          }
+        };
+
+        const onLoaded = () => {
+          v.play().catch(() => {});
+          if ('requestVideoFrameCallback' in v) {
+            v.requestVideoFrameCallback(captureFrame);
+          } else {
+            requestAnimationFrame(captureFrame);
+          }
+        };
+        const onEnded = () => {
+          stopped = true;
+          setFrameCount(framesRef.current.length);
+          setFramesReady(true);
+        };
+
+        v.addEventListener('loadedmetadata', onLoaded);
+        v.addEventListener('ended', onEnded);
+        // Some browsers may already have metadata available
+        if (v.readyState >= 1) onLoaded();
+
+        return () => {
+          stopped = true;
+          v.removeEventListener('loadedmetadata', onLoaded);
+          v.removeEventListener('ended', onEnded);
+        };
+      }, []);
+
+      // Boomerang playback at 30fps
+      useEffect(() => {
+        if (!framesReady) return;
+        const frames = framesRef.current;
+        if (frames.length === 0) return;
+
+        let idx = 0;
+        let dir = 1;
+        let lastTime = 0;
+        const interval = 1000 / 30;
+        let raf;
+
+        const draw = (idx) => {
+          const frame = frames[idx];
+          if (!frame) return;
+          const visible = canvasRefs.current.filter((c) => c && c.offsetParent !== null);
+          const n = visible.length;
+          if (n === 0) return;
+
+          for (let i = 0; i < visible.length; i++) {
+            const c = visible[i];
+            const cw = c.clientWidth, ch = c.clientHeight;
+            if (cw === 0 || ch === 0) continue;
+            if (c.width !== cw) c.width = cw;
+            if (c.height !== ch) c.height = ch;
+
+            const fw = frame.width, fh = frame.height;
+            const displayAspect = (cw * n) / ch;
+            const frameAspect   = fw / fh;
+
+            let sx, sy, sw, sh;
+            if (displayAspect > frameAspect) {
+              sw = fw;
+              sh = sw / displayAspect;
+              sx = 0;
+              sy = (fh - sh) / 2;
+            } else {
+              sh = fh;
+              sw = sh * displayAspect;
+              sy = 0;
+              sx = (fw - sw) / 2;
+            }
+            const sliceW = sw / n;
+            const sliceX = sx + sliceW * i;
+
+            const ctx = c.getContext('2d');
+            ctx.clearRect(0, 0, cw, ch);
+            ctx.drawImage(frame, sliceX, sy, sliceW, sh, 0, 0, cw, ch);
+          }
+        };
+
+        const tick = (t) => {
+          if (t - lastTime >= interval) {
+            lastTime = t;
+            draw(idx);
+            if (idx >= frames.length - 1) { idx = frames.length - 1; dir = -1; }
+            else if (idx <= 0)            { idx = 0;                dir =  1; }
+            idx += dir;
+          }
+          raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+
+        // Also redraw on resize so canvas backing store stays sharp
+        const onResize = () => draw(Math.max(0, Math.min(idx, frames.length - 1)));
+        window.addEventListener('resize', onResize);
+
+        return () => {
+          cancelAnimationFrame(raf);
+          window.removeEventListener('resize', onResize);
+        };
+      }, [framesReady]);
+
+      return (
+        <div className="w-screen h-screen overflow-hidden flex flex-col dotted-bg" style={{ background: '#0E1114', backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
+          {/* Hidden source video (offscreen) */}
+          <video
+            ref={videoRef}
+            src={VIDEO_SRC}
+            muted
+            playsInline
+            preload="auto"
+            style={{ position: 'absolute', width: 1, height: 1, opacity: 0, left: -9999, top: -9999 }}
+          />
+
+          {/* Navbar (outside the card) */}
+          <nav className="flex items-center justify-between px-7 py-7 shrink-0">
+            <span
+              className="text-white font-semibold text-2xl tracking-tight"
+              style={{ letterSpacing: '-0.02em' }}
+            >
+              micro
+            </span>
+            <div className="flex items-center gap-3">
+              <button
+                className="text-white/70 text-sm font-medium px-4 py-2 rounded-full hover:text-white"
+                style={{ transition: 'all 200ms' }}
+              >
+                Login
+              </button>
+              <button
+                className="text-white text-sm font-semibold px-5 py-2 rounded-full hover:opacity-90 active:scale-95"
+                style={{
+                  background: '#000',
+                  border: '1px solid #ffffff',
+                  transition: 'all 200ms',
+                }}
+              >
+                Join the Waitlist
+              </button>
+            </div>
+          </nav>
+
+          {/* Inner card */}
+          <div
+            className="mx-2 mb-2 flex-1 rounded-[32px] overflow-hidden relative"
+            style={{ background: '#030404' }}
+          >
+            {/* Three-panel video section */}
+            <div className="flex-1 flex gap-2 p-2 lg:p-5 min-h-0 h-full">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className={`flex-1 relative overflow-hidden rounded-[22px] ${i === 0 ? '' : 'hidden sm:block'}`}
+                >
+                  <canvas
+                    ref={(el) => { canvasRefs.current[i] = el; }}
+                    className="absolute inset-0 w-full h-full"
+                  />
+
+                  {/* Orbs */}
+                  {i === 0 && (
+                    <Orb
+                      style={{ top: '14%', left: '16%', width: 100, height: 100 }}
+                      color="rgba(255,255,255,0.70)"
+                    />
+                  )}
+                  {i === 1 && (
+                    <>
+                      <Orb
+                        style={{
+                          top: '8%', left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: 72, height: 72,
+                        }}
+                        color="rgba(200,215,255,0.55)"
+                      />
+                      {/* Middle pill image */}
+                      <div
+                        className="absolute z-20 overflow-hidden"
+                        style={{
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          width: 130,
+                          height: 225,
+                          borderRadius: 999,
+                          boxShadow: '0 0 0 1.5px rgba(255,255,255,0.10)',
+                        }}
+                      >
+                        <img
+                          src={PILL_IMG}
+                          alt=""
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            objectPosition: 'center',
+                          }}
+                        />
+                      </div>
+                    </>
+                  )}
+                  {i === 2 && (
+                    <Orb
+                      style={{ top: '20%', right: '10%', width: 110, height: 110 }}
+                      color="rgba(185,210,235,0.55)"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom fade gradient */}
+            <div
+              className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none"
+              style={{
+                height: 260,
+                background:
+                  'linear-gradient(to top, rgba(3,4,4,0.88) 0%, rgba(3,4,4,0.50) 45%, transparent 100%)',
+              }}
+            />
+
+            {/* Hero text + CTA row */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 pb-10 md:pb-14 z-20 pointer-events-none flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-0">
+              {/* Left column */}
+              <div className="pointer-events-auto flex flex-col gap-4">
+                <p className="text-white/70 text-sm leading-relaxed max-w-[280px]">
+                  An all-in-one tool for email, CRM, project management and more that
+                  automatically organizes itself.
+                </p>
+                <button
+                  className="self-start px-6 py-2.5 rounded-full text-sm font-semibold hover:opacity-90 active:scale-95"
+                  style={{ background: '#ffffff', color: '#030404', transition: 'all 200ms' }}
+                >
+                  Join the Waitlist
+                </button>
+              </div>
+
+              {/* Right column */}
+              <div className="pointer-events-auto flex flex-col md:items-end gap-2">
+                <h1
+                  className="text-white"
+                  style={{
+                    fontSize: 'clamp(52px, 10vw, 110px)',
+                    fontWeight: 600,
+                    lineHeight: 1.0,
+                    letterSpacing: '-0.03em',
+                    textAlign: 'right',
+                  }}
+                >
+                  Organized.
+                </h1>
+                <p className="text-white/60 text-base italic tracking-wide">
+                  So you don't have to be.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Debug — remove or keep for transparency about boomerang state */}
+          {!framesReady && (
+            <div
+              className="absolute left-1/2 -translate-x-1/2 text-white/40 text-xs"
+              style={{ top: '50%', pointerEvents: 'none' }}
+            >
+              Capturing frames…
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

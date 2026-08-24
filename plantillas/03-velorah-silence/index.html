@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Velorah — Where dreams rise through the silence</title>
+
+  <!-- Tailwind (CDN runtime) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN, dev builds — same convention as plantillas 01/02) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- Google Fonts: Instrument Serif (display) + Inter 400/500 (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind config: map CSS vars → utility colors so text-foreground / text-muted-foreground work -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: "hsl(var(--background) / <alpha-value>)",
+            foreground: "hsl(var(--foreground) / <alpha-value>)",
+            "muted-foreground": "hsl(var(--muted-foreground) / <alpha-value>)",
+            primary: {
+              DEFAULT: "hsl(var(--primary) / <alpha-value>)",
+              foreground: "hsl(var(--primary-foreground) / <alpha-value>)",
+            },
+            secondary: "hsl(var(--secondary) / <alpha-value>)",
+            muted: "hsl(var(--muted) / <alpha-value>)",
+            accent: "hsl(var(--accent) / <alpha-value>)",
+            border: "hsl(var(--border) / <alpha-value>)",
+            input: "hsl(var(--input) / <alpha-value>)",
+          },
+          fontFamily: {
+            display: ["'Instrument Serif'", "serif"],
+            body: ["'Inter'", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    /* ───── Theme tokens (dark, HSL) ───── */
+    :root {
+      --background: 201 100% 13%;       /* deep navy blue */
+      --foreground: 0 0% 100%;          /* white */
+      --muted-foreground: 240 4% 66%;   /* muted gray */
+      --primary: 0 0% 100%;
+      --primary-foreground: 0 0% 4%;
+      --secondary: 0 0% 10%;
+      --muted: 0 0% 10%;
+      --accent: 0 0% 10%;
+      --border: 0 0% 18%;
+      --input: 0 0% 18%;
+
+      --font-display: 'Instrument Serif', serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    html, body {
+      background: hsl(var(--background));
+      color: hsl(var(--foreground));
+    }
+    body {
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ───── Liquid Glass ───── */
+    .liquid-glass {
+      background: rgba(255, 255, 255, 0.01);
+      background-blend-mode: luminosity;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: none;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    .liquid-glass::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.4px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.45) 0%,
+        rgba(255,255,255,0.15) 20%,
+        rgba(255,255,255,0) 40%,
+        rgba(255,255,255,0) 60%,
+        rgba(255,255,255,0.15) 80%,
+        rgba(255,255,255,0.45) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    /* ───── Cinematic fade-rise ───── */
+    @keyframes fade-rise {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-rise         { animation: fade-rise 0.8s ease-out      both; }
+    .animate-fade-rise-delay   { animation: fade-rise 0.8s ease-out 0.2s both; }
+    .animate-fade-rise-delay-2 { animation: fade-rise 0.8s ease-out 0.4s both; }
+
+    /* Smooth hover for CTAs */
+    .liquid-glass {
+      transition: transform 0.25s ease-out;
+    }
+  </style>
+</head>
+<body class="bg-background text-foreground">
+  <div id="root"></div>
+
+  <!-- ===================== APP ===================== -->
+  <script type="text/babel">
+    function Navbar() {
+      const links = [
+        { label: "Home",     active: true  },
+        { label: "Studio",   active: false },
+        { label: "About",    active: false },
+        { label: "Journal",  active: false },
+        { label: "Reach Us", active: false },
+      ];
+
+      return (
+        <nav className="relative z-10 max-w-7xl mx-auto flex flex-row items-center justify-between px-8 py-6">
+          {/* Logo */}
+          <a
+            href="#"
+            className="text-3xl tracking-tight text-foreground leading-none"
+            style={{ fontFamily: "'Instrument Serif', serif" }}
+          >
+            Velorah<sup className="text-xs">®</sup>
+          </a>
+
+          {/* Center links (desktop) */}
+          <div className="hidden md:flex items-center gap-8">
+            {links.map((l) => (
+              <a
+                key={l.label}
+                href="#"
+                className={
+                  "text-sm transition-colors " +
+                  (l.active
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground")
+                }
+              >
+                {l.label}
+              </a>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <a
+            href="#"
+            className="liquid-glass rounded-full px-6 py-2.5 text-sm text-foreground hover:scale-[1.03]"
+          >
+            Begin Journey
+          </a>
+        </nav>
+      );
+    }
+
+    function Hero() {
+      return (
+        <section
+          className="relative z-10 flex flex-col items-center justify-center text-center px-6 pt-32 pb-40"
+          style={{ paddingTop: "90px", paddingBottom: "90px" }}
+        >
+          <h1
+            className="animate-fade-rise text-5xl sm:text-7xl md:text-8xl leading-[0.95] max-w-7xl font-normal text-foreground"
+            style={{
+              fontFamily: "'Instrument Serif', serif",
+              letterSpacing: "-2.46px",
+            }}
+          >
+            Where{" "}
+            <em className="not-italic text-muted-foreground">dreams</em>{" "}
+            rise{" "}
+            <em className="not-italic text-muted-foreground">through the silence.</em>
+          </h1>
+
+          <p className="animate-fade-rise-delay text-muted-foreground text-base sm:text-lg max-w-2xl mt-8 leading-relaxed">
+            We're designing tools for deep thinkers, bold creators, and quiet
+            rebels. Amid the chaos, we build digital spaces for sharp focus and
+            inspired work.
+          </p>
+
+          <a
+            href="#"
+            className="animate-fade-rise-delay-2 liquid-glass rounded-full px-14 py-5 text-base text-foreground mt-12 hover:scale-[1.03] cursor-pointer"
+          >
+            Begin Journey
+          </a>
+        </section>
+      );
+    }
+
+    function App() {
+      return (
+        <main className="relative min-h-screen w-full overflow-hidden bg-background">
+          {/* Fullscreen looping background video */}
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="absolute inset-0 w-full h-full object-cover z-0"
+            src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260314_131748_f2ca2a28-fed7-44c8-b9a9-bd9acdd5ec31.mp4"
+          />
+
+          {/* Foreground content */}
+          <div className="relative z-10 flex flex-col min-h-screen">
+            <Navbar />
+            <div className="flex-1 flex items-center justify-center">
+              <Hero />
+            </div>
+          </div>
+        </main>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>

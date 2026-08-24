@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VEX — Shaping tomorrow with vision and action.</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-14) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind config: Inter as default sans -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    html, body { background: #000; color: #fff; }
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Liquid Glass */
+    .liquid-glass {
+      background: rgba(0, 0, 0, 0.4);
+      background-blend-mode: luminosity;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: none;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    .liquid-glass::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.4px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 20%,
+        rgba(255,255,255,0)   40%, rgba(255,255,255,0)   60%,
+        rgba(255,255,255,0.1) 80%, rgba(255,255,255,0.3) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useRef, useState } = React;
+
+    const VIDEO_SRC = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260403_050628_c4e32401-fab4-4a27-b7a8-6e9291cd5959.mp4';
+
+    const NAV_LINKS = ['Story', 'Investing', 'Building', 'Advisory'];
+
+    // ───── FadeIn ─────
+    function FadeIn({ children, delay = 0, duration = 1000, className = '', style }) {
+      const [visible, setVisible] = useState(false);
+      useEffect(() => {
+        const t = setTimeout(() => setVisible(true), delay);
+        return () => clearTimeout(t);
+      }, [delay]);
+      return (
+        <div
+          className={`transition-opacity ${className}`}
+          style={{
+            opacity: visible ? 1 : 0,
+            transitionDuration: `${duration}ms`,
+            ...style,
+          }}
+        >
+          {children}
+        </div>
+      );
+    }
+
+    // ───── AnimatedHeading ─────
+    function AnimatedHeading({ text, className = '', style, initialDelay = 200, charDelay = 30 }) {
+      const [animate, setAnimate] = useState(false);
+      useEffect(() => {
+        const t = setTimeout(() => setAnimate(true), initialDelay);
+        return () => clearTimeout(t);
+      }, [initialDelay]);
+
+      const lines = text.split('\n');
+      return (
+        <h1 className={className} style={style}>
+          {lines.map((line, lineIndex) => (
+            <span key={lineIndex} style={{ display: 'block' }}>
+              {line.split('').map((ch, charIndex) => {
+                const delay =
+                  (lineIndex * line.length * charDelay) + (charIndex * charDelay);
+                return (
+                  <span
+                    key={charIndex}
+                    style={{
+                      display: 'inline-block',
+                      opacity: animate ? 1 : 0,
+                      transform: animate ? 'translateX(0)' : 'translateX(-18px)',
+                      transition: `opacity 500ms ease-out ${delay}ms, transform 500ms ease-out ${delay}ms`,
+                    }}
+                  >
+                    {ch === ' ' ? ' ' : ch}
+                  </span>
+                );
+              })}
+            </span>
+          ))}
+        </h1>
+      );
+    }
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      const videoRef = useRef(null);
+
+      useEffect(() => {
+        const v = videoRef.current;
+        if (v) v.play().catch(() => {});
+      }, []);
+
+      return (
+        <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
+          {/* Fullscreen background video — NO overlay */}
+          <video
+            ref={videoRef}
+            src={VIDEO_SRC}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ zIndex: 0 }}
+          />
+
+          {/* Foreground content */}
+          <div className="relative z-10 flex flex-col min-h-screen">
+            {/* Navbar */}
+            <div className="px-6 md:px-12 lg:px-16 pt-6">
+              <nav className="liquid-glass rounded-xl px-4 py-2 flex items-center justify-between">
+                <span className="text-2xl font-semibold tracking-tight">VEX</span>
+
+                <div className="hidden md:flex items-center gap-8">
+                  {NAV_LINKS.map((l) => (
+                    <a
+                      key={l}
+                      href="#"
+                      className="text-sm text-white hover:text-gray-300 transition-colors duration-200"
+                    >
+                      {l}
+                    </a>
+                  ))}
+                </div>
+
+                <a
+                  href="#"
+                  className="bg-white text-black px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors duration-200"
+                >
+                  Start a Chat
+                </a>
+              </nav>
+            </div>
+
+            {/* Hero content */}
+            <div className="flex-1 flex flex-col justify-end px-6 md:px-12 lg:px-16 pb-12 lg:pb-16">
+              <div className="lg:grid lg:grid-cols-2 lg:items-end gap-6">
+                {/* Left column */}
+                <div>
+                  <AnimatedHeading
+                    text={"Shaping tomorrow\nwith vision and action."}
+                    className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-normal mb-4"
+                    style={{ letterSpacing: '-0.04em' }}
+                    initialDelay={200}
+                    charDelay={30}
+                  />
+
+                  <FadeIn delay={800} duration={1000}>
+                    <p className="text-base md:text-lg text-gray-300 mb-5">
+                      We back visionaries and craft ventures that define what comes next.
+                    </p>
+                  </FadeIn>
+
+                  <FadeIn delay={1200} duration={1000}>
+                    <div className="flex flex-wrap gap-4">
+                      <button className="bg-white text-black px-8 py-3 rounded-lg font-medium">
+                        Start a Chat
+                      </button>
+                      <button className="liquid-glass border border-white/20 text-white px-8 py-3 rounded-lg font-medium hover:bg-white hover:text-black transition-colors duration-200">
+                        Explore Now
+                      </button>
+                    </div>
+                  </FadeIn>
+                </div>
+
+                {/* Right column — tag card */}
+                <div className="flex items-end justify-start lg:justify-end mt-10 lg:mt-0">
+                  <FadeIn delay={1400} duration={1000}>
+                    <div className="liquid-glass border border-white/20 px-6 py-3 rounded-xl">
+                      <span className="text-lg md:text-xl lg:text-2xl font-light">
+                        Investing. Building. Advisory.
+                      </span>
+                    </div>
+                  </FadeIn>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

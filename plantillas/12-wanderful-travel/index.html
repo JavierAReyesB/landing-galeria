@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wanderful — Venture without edges</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-11) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- GSAP -->
+  <script src="https://unpkg.com/gsap@3.12.5/dist/gsap.min.js"></script>
+
+  <!-- Google Fonts: Instrument Serif + Barlow + Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    @font-face {
+      font-family: 'Dirtyline';
+      src: url('https://fonts.cdnfonts.com/s/15011/Dirtyline36DaysofType.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+    html, body { background: #000; color: #fff; }
+    body {
+      font-family: 'Barlow', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Liquid Glass */
+    .liquid-glass {
+      background: rgba(255,255,255,0.01);
+      background-blend-mode: luminosity;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      border: none;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    .liquid-glass::before {
+      content: "";
+      position: absolute; inset: 0;
+      border-radius: inherit;
+      padding: 1.4px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.45) 0%,
+        rgba(255,255,255,0.15) 20%,
+        rgba(255,255,255,0)    40%,
+        rgba(255,255,255,0)    60%,
+        rgba(255,255,255,0.15) 80%,
+        rgba(255,255,255,0.45) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useRef, useState } = React;
+
+    const VIDEO_SRC = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260510_060007_60275ce7-030c-4668-a160-8f364ec537d3.mp4';
+
+    const NAV_LINKS = ['JOURNEY', 'BENEFITS', 'JOURNAL', 'GUIDEBOOK'];
+
+    // ───── Lucide Lock icon ─────
+    function Lock({ size = 24, strokeWidth = 2, className = '', style }) {
+      return (
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+          style={style}
+        >
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+      );
+    }
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      const [mounted, setMounted] = useState(false);
+      const videoBgRef = useRef(null);
+      const videoRef   = useRef(null);
+
+      // Fade-in trigger
+      useEffect(() => {
+        const t = setTimeout(() => setMounted(true), 50);
+        return () => clearTimeout(t);
+      }, []);
+
+      // GSAP parallax (mousemove → lerp → gsap.set on videoBg)
+      useEffect(() => {
+        const gsap = window.gsap;
+        if (!gsap) return;
+
+        let targetX = 0, targetY = 0;
+        let currentX = 0, currentY = 0;
+        let rafId = null;
+
+        const onMove = (e) => {
+          const cx = window.innerWidth  / 2;
+          const cy = window.innerHeight / 2;
+          targetX = ((e.clientX - cx) / cx) * 20;
+          targetY = ((e.clientY - cy) / cy) * 20;
+        };
+
+        const tick = () => {
+          currentX += (targetX - currentX) * 0.06;
+          currentY += (targetY - currentY) * 0.06;
+          if (videoBgRef.current) gsap.set(videoBgRef.current, { x: currentX, y: currentY });
+          rafId = requestAnimationFrame(tick);
+        };
+
+        window.addEventListener('mousemove', onMove);
+        rafId = requestAnimationFrame(tick);
+
+        return () => {
+          window.removeEventListener('mousemove', onMove);
+          if (rafId) cancelAnimationFrame(rafId);
+        };
+      }, []);
+
+      const onLoadedMetadata = () => {
+        const v = videoRef.current;
+        if (v) v.playbackRate = 1.25;
+      };
+
+      return (
+        <div
+          className="min-h-screen bg-black text-white overflow-x-hidden"
+          style={{ fontFamily: "'Inter', sans-serif" }}
+        >
+          {/* Background video */}
+          <div
+            ref={videoBgRef}
+            className="fixed inset-0 z-0 scale-[1.08] origin-center"
+          >
+            <video
+              ref={videoRef}
+              src={VIDEO_SRC}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              onLoadedMetadata={onLoadedMetadata}
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Header */}
+          <header className="fixed top-0 left-0 right-0 z-50 px-10 py-8 flex justify-between items-center">
+            {/* Wordmark */}
+            <a
+              href="#"
+              className="font-semibold tracking-tight text-white"
+              style={{ fontSize: 17 }}
+            >
+              Wanderful<sup className="ml-0.5">TM</sup>
+            </a>
+
+            {/* Center nav pill */}
+            <nav className="liquid-glass rounded-full px-2 py-2 flex items-center gap-1">
+              {NAV_LINKS.map((l) => (
+                <a
+                  key={l}
+                  href="#"
+                  className="text-white/90 hover:text-white px-4 py-1.5 rounded-full transition-colors duration-200"
+                  style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.12em' }}
+                >
+                  {l}
+                </a>
+              ))}
+            </nav>
+
+            {/* Right CTA */}
+            <a
+              href="#"
+              className="liquid-glass rounded-full px-5 py-2.5 text-white/90 hover:text-white"
+              style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.12em' }}
+            >
+              GET ROAMING
+            </a>
+          </header>
+
+          {/* Hero headline (centered, fixed top:120px) */}
+          <div
+            className={
+              'fixed left-0 right-0 z-20 text-center px-5 transition-all duration-1000 ' +
+              (mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6')
+            }
+            style={{ top: 120 }}
+          >
+            <h1
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                fontWeight: 400,
+                fontSize: 'clamp(40px, 5.4vw, 72px)',
+                lineHeight: 1.1,
+                letterSpacing: '-0.02em',
+                color: '#ffffff',
+                margin: 0,
+              }}
+            >
+              Venture without edges.
+            </h1>
+            <h1
+              style={{
+                fontFamily: "'Inter', sans-serif",
+                fontWeight: 400,
+                fontSize: 'clamp(40px, 5.4vw, 72px)',
+                lineHeight: 1.1,
+                letterSpacing: '-0.02em',
+                color: 'rgba(255,255,255,0.55)',
+                margin: 0,
+              }}
+            >
+              Uncover with keen instinct.
+            </h1>
+          </div>
+
+          {/* Bottom block */}
+          <div
+            className={
+              'fixed left-0 right-0 z-20 flex flex-col items-center gap-6 px-5 transition-all duration-1000 delay-300 ' +
+              (mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6')
+            }
+            style={{ bottom: 56 }}
+          >
+            <p
+              className="text-center max-w-[620px]"
+              style={{ fontSize: 15, lineHeight: 1.6 }}
+            >
+              <span style={{ color: '#ffffff' }}>
+                Our smart itineraries shape around you — your rhythm, your vibe, your
+                hunger for adventure.
+              </span>
+              <span style={{ color: 'rgba(255,255,255,0.55)' }}>
+                {' '}Each getaway is tailored, seamless, and wholly yours.
+              </span>
+            </p>
+
+            <button
+              className="rounded-full transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+              style={{
+                background: '#ffffff',
+                color: '#000000',
+                fontSize: 15,
+                fontWeight: 500,
+                padding: '14px 32px',
+                boxShadow: '0 0 0 0 rgba(255,255,255,0)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 32px 4px rgba(255,255,255,0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 0 0 rgba(255,255,255,0)';
+              }}
+            >
+              Plan my escape today
+            </button>
+
+            <div
+              className="flex items-center gap-2"
+              style={{ color: 'rgba(255,255,255,0.7)' }}
+            >
+              <Lock size={13} strokeWidth={1.5} />
+              <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.14em' }}>
+                SECURE BY DESIGN. ZERO DATA LEAKS.
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

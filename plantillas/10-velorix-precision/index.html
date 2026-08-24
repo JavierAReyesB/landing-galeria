@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>velorix — Where precision finds its edge</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-09) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    html, body { background: #000; color: #fff; }
+    body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useState } = React;
+
+    const BG_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260508_155101_f2540600-6fe9-433e-8e48-b3f4b72f0727.mp4';
+    const NAV_ITEMS = ['Platform', 'How it works', 'AI Defense', 'Connections', 'Insights'];
+
+    // ───── Lucide icons (inline with exact paths) ─────
+    const lucideBase = {
+      viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+      strokeLinecap: 'round', strokeLinejoin: 'round',
+    };
+    function Menu({ size = 24, color = 'currentColor', strokeWidth = 2 }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} stroke={color} strokeWidth={strokeWidth}>
+          <line x1="4" x2="20" y1="12" y2="12" />
+          <line x1="4" x2="20" y1="6"  y2="6"  />
+          <line x1="4" x2="20" y1="18" y2="18" />
+        </svg>
+      );
+    }
+    function XIcon({ size = 24, color = 'currentColor', strokeWidth = 2 }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} stroke={color} strokeWidth={strokeWidth}>
+          <path d="M18 6 6 18" />
+          <path d="m6 6 12 12" />
+        </svg>
+      );
+    }
+    function ArrowRight({ size = 24, className = '', style }) {
+      return (
+        <svg {...lucideBase} width={size} height={size} className={className} style={style} strokeWidth={2}>
+          <path d="M5 12h14" />
+          <path d="m12 5 7 7-7 7" />
+        </svg>
+      );
+    }
+
+    // ───── HamburgerButton ─────
+    function HamburgerButton({ open, onClick }) {
+      return (
+        <button
+          onClick={onClick}
+          className="lg:hidden relative w-9 h-9 flex items-center justify-center rounded-full transition-all duration-300"
+          style={{ backgroundColor: open ? '#1a1a1a' : 'transparent' }}
+          aria-label="Toggle menu"
+        >
+          <span
+            className="absolute transition-all duration-300"
+            style={{
+              opacity: open ? 0 : 1,
+              transform: open ? 'rotate(-90deg) scale(0.5)' : 'rotate(0deg) scale(1)',
+              transitionTimingFunction: 'cubic-bezier(0.23,1,0.32,1)',
+            }}
+          >
+            <Menu size={20} color="white" strokeWidth={1.5} />
+          </span>
+          <span
+            className="absolute transition-all duration-300"
+            style={{
+              opacity: open ? 1 : 0,
+              transform: open ? 'rotate(0deg) scale(1)' : 'rotate(90deg) scale(0.5)',
+              transitionTimingFunction: 'cubic-bezier(0.23,1,0.32,1)',
+            }}
+          >
+            <XIcon size={20} color="white" strokeWidth={1.5} />
+          </span>
+        </button>
+      );
+    }
+
+    // ───── MobileMenu ─────
+    function MobileMenu({ open, onClose }) {
+      return (
+        <>
+          <div
+            className="fixed inset-0 z-30 lg:hidden transition-all duration-500"
+            style={{
+              backdropFilter: open ? 'blur(12px)' : 'blur(0px)',
+              WebkitBackdropFilter: open ? 'blur(12px)' : 'blur(0px)',
+              backgroundColor: open ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0)',
+              pointerEvents: open ? 'auto' : 'none',
+            }}
+            onClick={onClose}
+          />
+
+          <div
+            className="fixed top-0 left-0 right-0 z-40 lg:hidden overflow-hidden"
+            style={{
+              maxHeight: open ? '420px' : '0px',
+              transition: 'max-height 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
+            }}
+          >
+            <div
+              className="pt-20 pb-6 px-5"
+              style={{
+                backgroundColor: 'rgba(8,8,8,0.97)',
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <div className="flex flex-col gap-1">
+                {NAV_ITEMS.map((item, i) => (
+                  <a
+                    key={item}
+                    href="#"
+                    onClick={onClose}
+                    className="text-white/70 hover:text-white text-base py-3 px-3 rounded-xl hover:bg-white/5 transition-all duration-200 flex items-center justify-between group"
+                    style={{
+                      fontFamily: 'Inter, sans-serif',
+                      opacity: open ? 1 : 0,
+                      transform: open ? 'translateY(0)' : 'translateY(-8px)',
+                      transition:
+                        `opacity 0.4s cubic-bezier(0.23,1,0.32,1) ${i * 50 + 80}ms, ` +
+                        `transform 0.4s cubic-bezier(0.23,1,0.32,1) ${i * 50 + 80}ms, ` +
+                        `color 0.2s, background 0.2s`,
+                    }}
+                  >
+                    {item}
+                    <ArrowRight
+                      size={14}
+                      className="opacity-0 group-hover:opacity-40 -translate-x-1 group-hover:translate-x-0 transition-all duration-200"
+                    />
+                  </a>
+                ))}
+              </div>
+
+              <div
+                className="mt-5 pt-5"
+                style={{
+                  borderTop: '1px solid rgba(255,255,255,0.07)',
+                  opacity: open ? 1 : 0,
+                  transform: open ? 'translateY(0)' : 'translateY(-8px)',
+                  transition:
+                    'opacity 0.4s cubic-bezier(0.23,1,0.32,1) 360ms, ' +
+                    'transform 0.4s cubic-bezier(0.23,1,0.32,1) 360ms',
+                }}
+              >
+                <button
+                  className="w-full py-3 rounded-full text-black text-sm font-medium transition-all duration-300 hover:opacity-80"
+                  style={{ fontFamily: 'Inter, sans-serif', backgroundColor: '#ffffff' }}
+                >
+                  Join the wait
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    // ───── Navbar ─────
+    function Navbar() {
+      const [open, setOpen] = useState(false);
+
+      useEffect(() => {
+        const onKey = (e) => e.key === 'Escape' && setOpen(false);
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+      }, []);
+
+      return (
+        <>
+          <nav className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-4 lg:px-10 lg:py-6">
+            <span
+              className="text-white text-xl font-semibold tracking-tight"
+              style={{ fontFamily: 'Inter, sans-serif' }}
+            >
+              velorix
+            </span>
+
+            {/* Desktop center pill */}
+            <div
+              className="hidden lg:flex items-center gap-1 rounded-full px-2 py-1.5"
+              style={{ backgroundColor: '#0C0C0C' }}
+            >
+              {NAV_ITEMS.map((item) => (
+                <a
+                  key={item}
+                  href="#"
+                  className="text-white/80 hover:text-white text-sm px-4 py-1.5 rounded-full hover:bg-white/10 transition-all duration-200"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
+                  {item}
+                </a>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <HamburgerButton open={open} onClick={() => setOpen((v) => !v)} />
+              <button
+                className="hidden lg:block text-sm font-medium px-5 py-2 rounded-full text-black transition-all duration-300 hover:opacity-80"
+                style={{ fontFamily: 'Inter, sans-serif', backgroundColor: '#ffffff' }}
+              >
+                Join the wait
+              </button>
+            </div>
+          </nav>
+
+          <MobileMenu open={open} onClose={() => setOpen(false)} />
+        </>
+      );
+    }
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      return (
+        <div
+          className="relative w-full h-screen overflow-hidden bg-black"
+          style={{ fontFamily: 'Inter, sans-serif' }}
+        >
+          {/* Background video */}
+          <video
+            className="absolute inset-0 z-0 w-full h-full object-cover"
+            src={BG_VIDEO}
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+
+          <Navbar />
+
+          {/* Hero content */}
+          <div className="relative z-20 flex flex-col items-center text-center pt-[90px] md:pt-[120px] px-5 sm:px-8">
+            <h1
+              className="text-white font-normal leading-[1.12] tracking-tight max-w-3xl"
+              style={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: 'clamp(1.75rem, 5vw, 2.6rem)',
+              }}
+            >
+              Where precision finds its edge
+              <br className="hidden sm:block" />
+              {' '}and vision rewrites what comes next
+            </h1>
+
+            <p
+              className="mt-5 md:mt-6 text-white/60 text-sm md:text-base leading-relaxed max-w-xs sm:max-w-sm md:max-w-md"
+              style={{
+                fontFamily: "'Courier New', Courier, monospace",
+                letterSpacing: '0.01em',
+              }}
+            >
+              a seamless bridge - where raw ambition
+              <br className="hidden sm:block" />
+              {' '}and machine clarity converge as one
+            </p>
+
+            <button
+              className="mt-7 md:mt-8 flex items-center gap-2.5 px-5 py-2.5 rounded-full text-black text-sm font-medium transition-all duration-300 hover:opacity-80 group"
+              style={{ fontFamily: 'Inter, sans-serif', backgroundColor: '#ffffff' }}
+            >
+              Watch it unfold
+              <ArrowRight
+                size={15}
+                className="group-hover:translate-x-0.5 transition-transform duration-200"
+              />
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

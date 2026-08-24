@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Max Reed — London-based independent creator</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- React + Babel (CDN — same convention as plantillas 01-25) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    html, body { background: #0a0a0a; color: #fff; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Liquid Glass */
+    .liquid-glass {
+      background: rgba(255, 255, 255, 0.01);
+      background-blend-mode: luminosity;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    .liquid-glass::before {
+      content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1.4px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 20%,
+        rgba(255,255,255,0)    40%, rgba(255,255,255,0)    60%,
+        rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.45) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+    }
+
+    /* Marquee */
+    @keyframes marquee-left  { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    @keyframes marquee-right { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+    .animate-marquee-left  { animation: marquee-left  22s linear infinite; }
+    .animate-marquee-right { animation: marquee-right 26s linear infinite; }
+
+    /* Noise overlay (SVG fractalNoise → white grain via color-matrix) */
+    .noise-overlay { position: relative; }
+    .noise-overlay::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      opacity: 0.55; mix-blend-mode: soft-light;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+      background-size: 240px 240px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const VIDEO_BG     = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260507_150203_44a5bd32-516a-47ce-a077-8acbf9aa8991.mp4';
+    const VIDEO_10M    = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260507_154543_d5b83fc1-9cea-44f3-b5e8-8f325935211a.mp4';
+    const VIDEO_DAILY  = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260507_153148_d7a3e1dd-e5d0-4ce6-8306-00d7522ecc44.mp4';
+
+    // ───── Lucide icons (inline, strokeWidth 1.5) ─────
+    const I = { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' };
+    const make = (paths) => ({ size = 16, className = '' }) => (
+      <svg {...I} width={size} height={size} className={className}>
+        {paths}
+      </svg>
+    );
+
+    const ArrowUpRight = make(<><path d="M7 7h10v10"/><path d="M7 17 17 7"/></>);
+    const Sparkle      = make(<path d="M12 2 9.5 8.5 3 11l6.5 2.5L12 20l2.5-6.5L21 11l-6.5-2.5z"/>);
+    const Figma        = make(
+      <><path d="M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z"/>
+        <path d="M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z"/>
+        <path d="M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z"/>
+        <path d="M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z"/>
+        <path d="M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z"/></>
+    );
+    const Framer       = make(<path d="M5 16V9h14V2H5l7 7H5l7 7v7l7-7H12z"/>);
+    const Palette      = make(
+      <><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+        <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+        <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+        <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+        <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></>
+    );
+    const PenTool      = make(<><path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 7.586 7.586"/><circle cx="11" cy="11" r="2"/></>);
+    const Layers       = make(<><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></>);
+    const Type         = make(<><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></>);
+    const Aperture     = make(<><circle cx="12" cy="12" r="10"/><path d="m14.31 8 5.74 9.94"/><path d="M9.69 8h11.48"/><path d="m7.38 12 5.74-9.94"/><path d="M9.69 16 3.95 6.06"/><path d="M14.31 16H2.83"/><path d="m16.62 12-5.74 9.94"/></>);
+    const Chrome       = make(<><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" x2="12" y1="8" y2="8"/><line x1="3.95" x2="8.54" y1="6.06" y2="14"/><line x1="10.88" x2="15.46" y1="21.94" y2="14"/></>);
+    const Camera       = make(<><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3"/></>);
+    const Brush        = make(<><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></>);
+    const BoxIcon      = make(<><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></>);
+    const Wand2        = make(<><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></>);
+
+    // ───── Section label (label with sparkles each side) ─────
+    function SectionLabel({ text, justify = 'center' }) {
+      return (
+        <div
+          className={`flex items-center gap-2 text-[11px] uppercase text-white/70 ${
+            justify === 'start' ? 'justify-start' : 'justify-center'
+          }`}
+          style={{ letterSpacing: '0.22em' }}
+        >
+          <Sparkle size={12} className="text-white/60" />
+          <span>{text}</span>
+          <Sparkle size={12} className="text-white/60" />
+        </div>
+      );
+    }
+
+    // ───── IconTile ─────
+    function IconTile({ Icon }) {
+      return (
+        <div className="liquid-glass h-14 w-14 md:h-16 md:w-16 rounded-xl flex items-center justify-center shrink-0 text-white/85">
+          <Icon size={22} />
+        </div>
+      );
+    }
+
+    // ═════════════════════════ App ═════════════════════════
+    function App() {
+      const row1 = [Figma, Framer, Palette, PenTool, Layers, Type, Aperture, Chrome];
+      const row2 = [Camera, Brush, BoxIcon, Wand2, Figma, Framer, Type, Layers];
+
+      return (
+        <div
+          className="min-h-screen lg:h-screen bg-[#0a0a0a] text-white px-4 sm:px-6 md:px-10 lg:px-14 py-6 sm:py-8 md:py-10 flex flex-col gap-6 md:gap-8"
+        >
+          {/* Header */}
+          <header className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+            <div className="max-w-3xl">
+              <h1
+                className="text-[28px] sm:text-3xl md:text-4xl lg:text-[44px] font-normal tracking-tight"
+                style={{ lineHeight: 1.15 }}
+              >
+                Hi, I'm Max Reed!
+              </h1>
+              <p
+                className="text-sm md:text-[15px] text-white/60 mt-3"
+                style={{ lineHeight: 1.6 }}
+              >
+                A London-based independent creator shaping sharp visual systems,
+                web-ready products, and story-first campaigns. With a decade of craft
+                behind me, I help ideas move with focus and intention.
+              </p>
+            </div>
+            <button className="liquid-glass rounded-full text-sm text-white px-5 sm:px-6 py-2.5 sm:py-3 self-start shrink-0">
+              Let's Team Up Today
+            </button>
+          </header>
+
+          {/* Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 flex-1 min-h-0">
+            {/* ───── Column 1 — Background card ───── */}
+            <div className="relative rounded-2xl bg-black overflow-hidden p-5 md:p-6 flex flex-col gap-6 min-h-[420px]">
+              <video
+                src={VIDEO_BG}
+                autoPlay muted loop playsInline preload="auto"
+                className="absolute inset-0 w-full h-full object-cover opacity-70"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/30 to-black/70 pointer-events-none" />
+              <div className="relative z-10">
+                <SectionLabel text="BACKGROUND" />
+              </div>
+              <div className="relative z-10 mt-auto">
+                <div className="grid gap-3" style={{ gridTemplateColumns: 'auto auto 1fr auto' }}>
+                  {[
+                    { year: '2023', sep: '–Now', role: 'Freelance Creative', org: 'Solo Studio' },
+                    { year: '2020', sep: '–2023', role: 'Head of Brand Design', org: 'Rove Studio' },
+                    { year: '2017', sep: '–2020', role: 'Visual Stylist', org: 'Ember Works' },
+                  ].map((r, i) => (
+                    <React.Fragment key={i}>
+                      <span className="text-white/80 text-sm whitespace-nowrap">{r.year}{r.sep}</span>
+                      <Sparkle size={12} className="text-white/60 self-center" />
+                      <span className="text-white text-sm">{r.role}</span>
+                      <span className="text-white/60 text-sm whitespace-nowrap text-right">{r.org}</span>
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ───── Column 2 (stacked) ───── */}
+            <div className="grid grid-rows-[auto_1fr] gap-4 md:gap-5 min-h-0">
+              {/* Client Voice */}
+              <div className="noise-overlay rounded-2xl p-5 md:p-6 flex flex-col gap-4" style={{ backgroundColor: '#324444' }}>
+                <SectionLabel text="CLIENT VOICE" justify="start" />
+                <p
+                  className="text-[13px] sm:text-[13.5px] text-white/85"
+                  style={{ lineHeight: 1.6 }}
+                >
+                  "Max reshaped our image with a degree of finesse and vision that
+                  surpassed what we'd hoped for. The process felt graceful, and the
+                  outcomes speak for themselves."
+                </p>
+                <p className="text-[12px] text-white/70 mt-auto">
+                  <span className="font-semibold text-white">Elena Brooks</span>, Creative
+                  Director — Halcyon
+                </p>
+              </div>
+
+              {/* 10M+ card */}
+              <div className="relative rounded-2xl bg-black overflow-hidden p-5 md:p-6 flex flex-col min-h-[280px]">
+                <video
+                  src={VIDEO_10M}
+                  autoPlay muted loop playsInline preload="auto"
+                  className="absolute inset-0 w-full h-full object-cover opacity-70"
+                />
+                <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+                <div className="relative z-10 flex-1 flex items-center justify-center">
+                  <span
+                    className="text-5xl sm:text-6xl md:text-7xl lg:text-[88px] font-light tracking-tight text-white"
+                    style={{ textShadow: '0 4px 24px rgba(0,0,0,0.5)' }}
+                  >
+                    10M+
+                  </span>
+                </div>
+                <div className="relative z-10 text-center text-white/85 text-sm">
+                  Raised for startups
+                </div>
+              </div>
+            </div>
+
+            {/* ───── Column 3 (stacked) ───── */}
+            <div className="grid grid-rows-[1fr_auto] gap-4 md:gap-5 min-h-0">
+              {/* Daily Software */}
+              <div className="relative rounded-2xl bg-black overflow-hidden p-5 md:p-6 flex flex-col gap-6 min-h-[320px]">
+                <video
+                  src={VIDEO_DAILY}
+                  autoPlay muted loop playsInline preload="auto"
+                  className="absolute inset-0 w-full h-full object-cover opacity-50"
+                />
+                <div className="absolute inset-0 bg-black/40 pointer-events-none" />
+                <div className="relative z-10">
+                  <SectionLabel text="DAILY SOFTWARE" />
+                </div>
+
+                <div
+                  className="relative z-10 mt-auto flex flex-col gap-3 overflow-hidden"
+                  style={{
+                    WebkitMaskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
+                    maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
+                  }}
+                >
+                  {/* Row 1 — left */}
+                  <div className="flex animate-marquee-left gap-3" style={{ width: 'max-content' }}>
+                    {[...row1, ...row1].map((Icon, i) => (
+                      <IconTile key={i} Icon={Icon} />
+                    ))}
+                  </div>
+                  {/* Row 2 — right */}
+                  <div className="flex animate-marquee-right gap-3" style={{ width: 'max-content' }}>
+                    {[...row2, ...row2].map((Icon, i) => (
+                      <IconTile key={i} Icon={Icon} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Reach Me */}
+              <div className="noise-overlay rounded-2xl p-5 md:p-6 relative" style={{ backgroundColor: '#324444' }}>
+                <div className="flex flex-col gap-3">
+                  <SectionLabel text="REACH ME" justify="start" />
+                  <div>
+                    <p className="text-white text-sm">hi@maxreed.com</p>
+                    <p className="text-white/70 text-sm">+44 207 81 63</p>
+                  </div>
+                </div>
+                <button
+                  className="liquid-glass absolute top-4 right-4 h-9 w-9 rounded-full flex items-center justify-center text-white"
+                  aria-label="Reach me"
+                >
+                  <ArrowUpRight size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
