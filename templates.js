@@ -3,7 +3,7 @@
 window.TEMPLATES = [
   {
     id: "01-aetheris-voyage",
-    name: "Aetheris Voyage",
+    name: "Auriga Beyond",
     section: "Hero + Capabilities",
     type: "Landing cinematográfica",
     description:
@@ -14,7 +14,7 @@ window.TEMPLATES = [
   },
   {
     id: "02-unleash-full-power",
-    name: "Unleash The Full Power",
+    name: "Reverdia — Let nature take over",
     section: "Hero scroll-driven + About",
     type: "Hero cinematográfico interactivo",
     description:
@@ -25,7 +25,7 @@ window.TEMPLATES = [
   },
   {
     id: "03-velorah-silence",
-    name: "Velorah — Where dreams rise through the silence",
+    name: "Noctara — Where quiet minds bloom",
     section: "Hero único (single-page)",
     type: "Hero cinematográfico minimalista",
     description:
@@ -36,7 +36,7 @@ window.TEMPLATES = [
   },
   {
     id: "04-wild-daisy-fragrances",
-    name: "Wild Daisy Fragrances",
+    name: "Margot Bloom Parfums",
     section: "Hero + ScentFinder + WildScent",
     type: "Landing producto (perfumes) con vídeo + bloques color",
     description:
@@ -47,7 +47,7 @@ window.TEMPLATES = [
   },
   {
     id: "05-pureflow-one",
-    name: "PureFlow One",
+    name: "Halo One",
     section: "Hero único con spotlight reveal",
     type: "Hero interactivo con cursor-tracking",
     description:
@@ -57,8 +57,19 @@ window.TEMPLATES = [
     preview: "plantillas/05-pureflow-one/preview.png",
   },
   {
+    id: "08-microvisuals",
+    name: "Dreamframe",
+    section: "Hero scroll-driven (gira + florece)",
+    type: "Hero cinematográfico (scroll-scrub + gsap parallax)",
+    description:
+      "Hero fullscreen con título gigante italic Instrument Serif sobre un objeto floral-cristal que, al hacer scroll, gira mientras florece (vídeo escrubeado con el scroll y cargado como blob para un seek fluido). Nav liquid-glass pill central, CTAs primario blanco + glass secundario, parallax sutil con gsap siguiendo al cursor.",
+    tags: ["React", "Tailwind", "GSAP", "Scroll-scrub", "Liquid Glass", "CDN"],
+    path: "plantillas/08-microvisuals/index.html",
+    preview: "plantillas/08-microvisuals/preview.png",
+  },
+  {
     id: "06-prisma-studio",
-    name: "Prisma — Visual arts collective",
+    name: "Obscura Collective",
     section: "Hero + About + Features (4 cards)",
     type: "Landing creative studio (dark, cinematic)",
     description:
@@ -69,7 +80,7 @@ window.TEMPLATES = [
   },
   {
     id: "07-micro-boomerang",
-    name: "micro — Organized.",
+    name: "neat — Everything in its place.",
     section: "Hero único con vídeo en boomerang split",
     type: "Hero interactivo (frame-capture + canvas slicing)",
     description:
@@ -79,19 +90,8 @@ window.TEMPLATES = [
     preview: "plantillas/07-micro-boomerang/preview.png",
   },
   {
-    id: "08-microvisuals",
-    name: "MicroVisuals",
-    section: "Hero único con boomerang + parallax mouse",
-    type: "Hero cinematográfico (frame-capture + gsap parallax)",
-    description:
-      "Hero fullscreen con título gigante italic Instrument Serif sobre vídeo en boomerang capturado frame a frame. Nav liquid-glass pill central, CTAs primario blanco + glass secundario, parallax sutil con gsap siguiendo al cursor.",
-    tags: ["React", "Tailwind", "GSAP", "Canvas Boomerang", "Liquid Glass", "CDN"],
-    path: "plantillas/08-microvisuals/index.html",
-    preview: "plantillas/08-microvisuals/preview.png",
-  },
-  {
     id: "09-eos-web3",
-    name: "EOS — Web3 at the Speed of Experience",
+    name: "NEXA — Web3 without friction",
     section: "Hero único Web3 (video + gradient text)",
     type: "Landing Web3 minimalista",
     description:
@@ -102,7 +102,7 @@ window.TEMPLATES = [
   },
   {
     id: "10-velorix-precision",
-    name: "velorix — Where precision finds its edge",
+    name: "Kantile — Precision by design",
     section: "Hero único + Nav con menú hamburguesa stagger",
     type: "Hero AI minimalista",
     description:
@@ -113,7 +113,7 @@ window.TEMPLATES = [
   },
   {
     id: "11-jack-3d-creator",
-    name: "Jack — 3D Creator",
+    name: "Milo — 3D Creator",
     section: "Portfolio 5 secciones (Hero + Marquee + About + Services + Projects)",
     type: "Portfolio creativo con scroll-driven animations",
     description:
@@ -124,7 +124,7 @@ window.TEMPLATES = [
   },
   {
     id: "12-wanderful-travel",
-    name: "Wanderful — Venture without edges",
+    name: "Roamly — Venture farther",
     section: "Hero único travel con video parallax",
     type: "Hero cinematográfico simple (gsap parallax)",
     description:
@@ -135,7 +135,7 @@ window.TEMPLATES = [
   },
   {
     id: "13-vision-of-engineering",
-    name: "The vision of engineering is human + AI",
+    name: "Synthex — Engineering, human + AI",
     section: "Hero único con HLS + iconos de vídeo circulares",
     type: "Hero AI/HR cinematográfico",
     description:
@@ -146,7 +146,7 @@ window.TEMPLATES = [
   },
   {
     id: "14-travel-discover-world",
-    name: "Travel — Discover the World",
+    name: "Atlas — Explore the World",
     section: "Multi-página (Hero split + Destinations + Tour detail + 404)",
     type: "Luxury travel concept (multi-route)",
     description:
@@ -157,7 +157,7 @@ window.TEMPLATES = [
   },
   {
     id: "15-vex-vision-action",
-    name: "VEX — Shaping tomorrow with vision and action",
+    name: "AXIO — Vision into action",
     section: "Hero único VC/Studio con video raw",
     type: "Hero minimalista (char-by-char + liquid-glass)",
     description:
@@ -168,7 +168,7 @@ window.TEMPLATES = [
   },
   {
     id: "16-prosthetics-shark-tank",
-    name: "Simple, smart prosthetics",
+    name: "Motum — Smart prosthetics",
     section: "Hero único producto (video + nav pill twin + CTA outline)",
     type: "Hero minimalista product/health",
     description:
@@ -179,7 +179,7 @@ window.TEMPLATES = [
   },
   {
     id: "17-skyelite-private-jets",
-    name: "SkyElite — Premium. Accessible.",
+    name: "AeroLux — Private aviation",
     section: "Hero único premium (video + heading overlap)",
     type: "Hero luxury aviation",
     description:
@@ -190,7 +190,7 @@ window.TEMPLATES = [
   },
   {
     id: "18-novadesk-signup",
-    name: "NovaDesk — Sign up",
+    name: "Loombase — Sign up",
     section: "Página de sign-up con card 2-columnas sobre video",
     type: "Auth page premium",
     description:
@@ -201,7 +201,7 @@ window.TEMPLATES = [
   },
   {
     id: "19-toonhub-figurines",
-    name: "TOONHUB — Figurines",
+    name: "POPFORGE — Figurines",
     section: "Hero único con carousel de figurines 3D (4 items, role-based)",
     type: "Carousel producto interactivo",
     description:
@@ -212,7 +212,7 @@ window.TEMPLATES = [
   },
   {
     id: "20-studio-ai-web-design",
-    name: "Studio — The Website Your Brand Deserves",
+    name: "Studiomatic — Your brand, elevated",
     section: "Landing AI web agency (7 secciones)",
     type: "Landing premium multi-sección con HLS",
     description:
@@ -223,7 +223,7 @@ window.TEMPLATES = [
   },
   {
     id: "21-operations-automation",
-    name: "Intelligent Daily Routine Automation",
+    name: "FlowOps — Routine automation",
     section: "2 secciones scroll-based (hero video + red + cloud parallax)",
     type: "Landing SaaS automation con cloud transition",
     description:
@@ -234,7 +234,7 @@ window.TEMPLATES = [
   },
   {
     id: "22-grow-ai-recruitment",
-    name: "Grow — The most powerful AI in talent acquisition",
+    name: "TalentIQ — AI recruitment",
     section: "Hero + Social proof con video fade-loop + logo marquee",
     type: "Landing AI recruitment dark theme",
     description:
@@ -245,7 +245,7 @@ window.TEMPLATES = [
   },
   {
     id: "23-aethera-eternal",
-    name: "Aethera — Beyond silence, we build the eternal",
+    name: "Aeonis — We build the eternal",
     section: "Hero único light theme + video fade-loop",
     type: "Hero cinematográfico minimalista (light)",
     description:
@@ -256,7 +256,7 @@ window.TEMPLATES = [
   },
   {
     id: "24-speakup-creative",
-    name: "Speakup — Crafting the improbable",
+    name: "Loudmark — Crafting the improbable",
     section: "Hero único creative agency con video y heading verde",
     type: "Hero light creative agency",
     description:
@@ -267,7 +267,7 @@ window.TEMPLATES = [
   },
   {
     id: "25-vision-digital-reality",
-    name: "Your Vision · Our Digital Reality",
+    name: "Pixel & Vision — Digital reality",
     section: "Hero glassmorphism + HLS video mix-blend + logo cloud slider",
     type: "Landing dark con purple/pink gradients",
     description:
@@ -278,7 +278,7 @@ window.TEMPLATES = [
   },
   {
     id: "26-max-reed-portfolio",
-    name: "Max Reed — London-based independent creator",
+    name: "Liam Hart — Independent creator",
     section: "Features grid 3-col personal portfolio (dark)",
     type: "Bento dashboard portfolio",
     description:

@@ -18,7 +18,7 @@ Vía **CDN**, sin build step. Adaptación de la spec original (React 19 + Vite +
 
 ## 🎨 Sistema de diseño
 
-- **Section 1** (hero): vídeo Cloudinary `baby-track-video_e968wn.mp4` fullscreen, paleta blanco sobre el vídeo, CTA glass pill borde blanco.
+- **Section 1** (hero): vídeo local `hero-video.mp4` (1280x720, 5,1 s) fullscreen, paleta blanco sobre el vídeo, CTA glass pill borde blanco.
 - **Section 2** (red): bg `#FF0000` puro. Logo blanco, copy uppercase, signature Marck Script y vídeo bottom.
 - **Tipografía**:
   - Body: **Manrope** (400/600).
@@ -67,7 +67,7 @@ Path orgánico viewBox `0 0 120 120`, llena en blanco, forma estilizada que recu
 
 1. Abrir `index.html` directamente o vía el viewer del catálogo.
 2. Sin `npm install`, sin build.
-3. Los videos vienen de **Cloudinary** (no CloudFront en esta plantilla) — si caen, sustituir las 3 constantes URL.
+3. Los 3 assets son **locales** (`hero-video.mp4`, `bottom-video.mp4`, `cloud.png`). Antes venían de Cloudinary y la cuenta se cayo (401 en toda la cuenta, incluido su `sample.jpg`); se recuperaron los originales desde el Internet Archive y se guardaron en la carpeta para que no vuelvan a romperse.
 4. Hacer scroll para ver la transición de nubes entre las 2 secciones.
 
 ## 📝 Notas / Pendientes
@@ -76,4 +76,4 @@ Path orgánico viewBox `0 0 120 120`, llena en blanco, forma estilizada que recu
 - [ ] El cloud parallax requiere que la pestaña esté en foreground (rAF se pausa en background — verificado).
 - [ ] El `<main>` con su propio scroll container puede romper el back-button scroll del navegador. Si necesitas scroll a nivel body, sustituir `useScroll({ container })` por `useScroll()` y mover el scroll al body.
 - [ ] Las dos descripciones de párrafo (sección 1 izquierda + sección 1 bottom mobile) son inventadas/parafraseadas. Sustituir por copy real si lo tienes.
-- [ ] El vídeo bottom (`track-video_2_s9lp53.mp4`) no se posiciona absoluto — se inserta como bloque normal al final de la sección roja, así que ocupa altura adicional del scroll.
+- [ ] El vídeo bottom (`bottom-video.mp4`) no se posiciona absoluto — se inserta como bloque normal al final de la sección roja, así que ocupa altura adicional del scroll.

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Catálogo · Plantillas para webs</title>
+  <title>Galería de landing pages</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,42 +27,25 @@
   </script>
 
   <style>
-    html, body { background: #0a0a0a; color: #fff; font-family: 'Barlow', sans-serif; }
+    html, body { background: #f7f7f8; color: #18181b; font-family: 'Barlow', sans-serif; }
 
-    /* Liquid glass card (subtle) */
+    /* Light card */
     .glass {
-      background: rgba(255,255,255,0.02);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.08);
+      background: #ffffff;
       position: relative;
       overflow: hidden;
       border-radius: 1.25rem;
-    }
-    .glass::before {
-      content: "";
-      position: absolute; inset: 0;
-      border-radius: inherit;
-      padding: 1.2px;
-      background: linear-gradient(180deg,
-        rgba(255,255,255,0.35) 0%,
-        rgba(255,255,255,0.08) 25%,
-        rgba(255,255,255,0) 50%,
-        rgba(255,255,255,0.08) 75%,
-        rgba(255,255,255,0.35) 100%);
-      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-              mask-composite: exclude;
-      pointer-events: none;
+      border: 1px solid rgba(0,0,0,0.07);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05);
     }
 
-    /* Background grid + radial glow */
+    /* Background grid + radial glow (light) */
     .bg-grid {
       background-image:
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120,80,255,0.18), transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 120%, rgba(80,160,255,0.12), transparent 60%),
-        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120,80,255,0.06), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 120%, rgba(80,160,255,0.05), transparent 60%),
+        linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px);
       background-size: auto, auto, 40px 40px, 40px 40px;
       background-position: 0 0, 0 0, -1px -1px, -1px -1px;
     }
@@ -70,9 +53,9 @@
     /* Preview placeholder */
     .preview-fallback {
       background:
-        radial-gradient(ellipse at 50% 60%, rgba(255,180,80,0.25), transparent 50%),
-        radial-gradient(ellipse at 30% 30%, rgba(120,80,255,0.2), transparent 50%),
-        #0a0a0a;
+        radial-gradient(ellipse at 50% 60%, rgba(255,180,80,0.15), transparent 50%),
+        radial-gradient(ellipse at 30% 30%, rgba(120,80,255,0.1), transparent 50%),
+        #e9e9ec;
     }
 
     /* Live iframe preview — image visible by default, iframe overlay on card hover */
@@ -80,7 +63,7 @@
       position: absolute;
       inset: 0;
       overflow: hidden;
-      background: #000;
+      background: #e4e4e7;
     }
     .preview-stage .preview-image {
       position: absolute;
@@ -174,24 +157,19 @@
       50% { opacity: 0.4; transform: scale(0.85); }
     }
 
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%) translateY(120%);
-      transition: transform .35s cubic-bezier(.22,1,.36,1), opacity .25s;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 100;
-    }
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-
     /* Button press feedback */
     .btn-press:active { transform: scale(0.97); }
+
+    /* ───── Preloader + entrada 3D de cards ───── */
+    #loader { transition: opacity .55s ease; }
+    #loader.done { opacity: 0; pointer-events: none; }
+
+    /* El grid define la perspectiva. Las cards arrancan APILADAS EN FILA en el
+       centro de la pantalla, cada una más profunda que la anterior (un tren que
+       se pierde en el punto de fuga), y despegan una a una hacia el frente
+       hasta recolocarse en su hueco del grid. Transforms y stagger van por JS. */
+    #grid { perspective: 1200px; }
+    #grid article { will-change: transform, opacity; }
 
     /* Pill tag */
     .tag {
@@ -199,9 +177,9 @@
       padding: 0.25rem 0.625rem;
       font-size: 11px;
       font-weight: 500;
-      color: rgba(255,255,255,0.85);
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
+      color: #52525b;
+      background: #f4f4f5;
+      border: 1px solid rgba(0,0,0,0.07);
       border-radius: 9999px;
       white-space: nowrap;
     }
@@ -210,25 +188,34 @@
 
 <body class="bg-grid min-h-screen">
 
+  <!-- ============== PRELOADER ============== -->
+  <div id="loader" class="fixed inset-0 z-[200] flex flex-col items-center justify-center" style="background:#f7f7f8;">
+    <div id="loader-pct" class="font-heading italic text-7xl md:text-8xl tracking-tight text-zinc-900 tabular-nums">0%</div>
+    <div class="mt-5 text-xs uppercase tracking-[0.25em] text-zinc-500 font-medium">Cargando landings…</div>
+    <div class="mt-6 w-56 h-px bg-black/10 overflow-hidden rounded-full">
+      <div id="loader-bar" class="h-full bg-zinc-900" style="width:0%; transition: width .2s ease;"></div>
+    </div>
+  </div>
+
   <!-- ============== HEADER ============== -->
   <header class="px-6 md:px-12 lg:px-20 pt-12 pb-8 max-w-7xl mx-auto">
     <div class="flex items-start justify-between gap-6 flex-wrap">
       <div>
-        <div class="text-xs uppercase tracking-[0.2em] text-white/50 mb-3 font-medium">
-          // Catálogo
+        <div class="text-xs uppercase tracking-[0.2em] text-zinc-500 mb-3 font-medium">
+          // Galería de proyectos
         </div>
         <h1 class="font-heading italic text-5xl md:text-6xl lg:text-7xl leading-[0.9] tracking-tight">
-          Plantillas <br/>para webs
+          Landing pages <br/>que convierten
         </h1>
-        <p class="mt-5 max-w-xl text-white/70 font-light">
-          Mi colección de templates con preview e <span class="italic">index.html</span> listo para copiar.
-          Pulsa <span class="font-semibold text-white">Copiar código</span> en cualquier card y pégalo donde lo necesites.
+        <p class="mt-5 max-w-xl text-zinc-600 font-light">
+          Una selección de landing pages que hemos diseñado y desarrollado.
+          Explora cada proyecto en vivo y descubre <span class="font-semibold text-zinc-900">lo que podemos crear para tu marca</span>.
         </p>
       </div>
 
       <div class="glass px-5 py-3 flex items-center gap-3 mt-2">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span class="text-sm text-white/80" id="count-label">— plantillas</span>
+        <span class="text-sm text-zinc-600" id="count-label">— proyectos</span>
       </div>
     </div>
   </header>
@@ -239,22 +226,12 @@
   </main>
 
   <!-- ============== FOOTER NOTE ============== -->
-  <footer class="px-6 md:px-12 lg:px-20 pb-10 max-w-7xl mx-auto text-xs text-white/40">
+  <footer class="px-6 md:px-12 lg:px-20 pb-10 max-w-7xl mx-auto text-sm text-zinc-500">
     <p>
-      💡 Si el botón "Copiar código" no funciona, este catálogo necesita un servidor local
-      (abrir con doble clic <span class="text-white/60">file://</span> bloquea el fetch).
-      Ejecuta <code class="text-white/70 bg-white/10 px-1.5 py-0.5 rounded">npx serve .</code> en esta carpeta
-      y abre <code class="text-white/70 bg-white/10 px-1.5 py-0.5 rounded">http://localhost:3000</code>.
+      Cada proyecto es un ejemplo real de lo que podemos diseñar y desarrollar para tu marca.
+      <span class="font-semibold text-zinc-900">¿Imaginas la tuya?</span>
     </p>
   </footer>
-
-  <!-- ============== TOAST ============== -->
-  <div id="toast" class="toast glass px-5 py-3 flex items-center gap-3 text-sm">
-    <svg class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
-    <span id="toast-msg">Copiado al portapapeles</span>
-  </div>
 
   <!-- ============== DATA + LOGIC ============== -->
   <script src="templates.js"></script>
@@ -264,14 +241,14 @@
     // ───── Render ─────
     const grid = document.getElementById("grid");
     const countLabel = document.getElementById("count-label");
-    countLabel.textContent = `${TEMPLATES.length} plantilla${TEMPLATES.length === 1 ? "" : "s"}`;
+    countLabel.textContent = `${TEMPLATES.length} proyecto${TEMPLATES.length === 1 ? "" : "s"}`;
 
     function cardHTML(t, idx) {
       const tags = t.tags.map(x => `<span class="tag">${x}</span>`).join("");
       return `
         <article class="glass flex flex-col overflow-hidden group" data-id="${t.id}">
           <!-- Preview (live iframe + image fallback) -->
-          <div class="relative aspect-[4/3] overflow-hidden border-b border-white/5">
+          <div class="relative aspect-[4/3] overflow-hidden border-b border-black/5">
             <div class="preview-stage" data-stage data-src="${t.path}">
               <!-- Static image — siempre visible salvo cuando se hace hover y el iframe está listo -->
               <img
@@ -299,57 +276,44 @@
               rel="noopener"
               class="absolute inset-0 z-10 flex items-end justify-center pb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style="background: linear-gradient(to top, rgba(0,0,0,0.65), transparent 50%);"
-              title="Abrir demo en vivo a pantalla completa"
+              title="Ver el proyecto en vivo"
             >
               <span class="bg-white text-black rounded-full px-4 py-2 text-xs font-semibold inline-flex items-center gap-1.5">
                 <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M7 17L17 7"/><path d="M7 7h10v10"/>
                 </svg>
-                Abrir a pantalla completa
+                Ver proyecto
               </span>
             </a>
           </div>
 
           <!-- Body -->
           <div class="flex flex-col flex-1 p-5">
-            <div class="text-[11px] uppercase tracking-[0.18em] text-white/45 mb-2 font-medium">
+            <div class="text-[11px] uppercase tracking-[0.18em] text-zinc-500 mb-2 font-medium">
               ${t.type}
             </div>
             <h3 class="font-heading italic text-3xl leading-none tracking-tight mb-3">
               ${t.name}
             </h3>
-            <p class="text-sm text-white/65 font-light leading-snug mb-4 flex-1">
+            <p class="text-sm text-zinc-600 font-light leading-snug mb-4 flex-1">
               ${t.description}
             </p>
 
             <div class="flex flex-wrap gap-1.5 mb-5">${tags}</div>
 
-            <!-- Actions -->
-            <div class="flex items-center gap-2 mt-auto">
-              <button
-                data-copy="${t.path}"
-                data-name="${t.name}"
-                class="btn-press flex-1 inline-flex items-center justify-center gap-2 bg-white text-black rounded-full px-4 py-2.5 text-sm font-semibold hover:bg-white/90 transition-colors"
-              >
-                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="9" y="9" width="13" height="13" rx="2"/>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                </svg>
-                <span class="copy-label">Copiar código</span>
-              </button>
-
+            <!-- Action -->
+            <div class="mt-auto">
               <a
                 href="viewer?t=${t.id}"
                 target="_blank"
                 rel="noopener"
-                class="btn-press inline-flex items-center justify-center gap-2 glass px-4 py-2.5 text-sm font-medium hover:bg-white/5 transition-colors"
-                title="Abrir demo en vivo (con barra superior y atajos)"
+                class="btn-press w-full inline-flex items-center justify-center gap-2 bg-zinc-900 text-white rounded-full px-4 py-2.5 text-sm font-semibold hover:bg-zinc-800 transition-colors"
+                title="Ver el proyecto en vivo"
               >
+                Ver proyecto
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 12a9 9 0 1 0 9-9"/>
-                  <path d="M3 4v5h5"/>
+                  <path d="M7 17L17 7"/><path d="M7 7h10v10"/>
                 </svg>
-                Demo
               </a>
             </div>
           </div>
@@ -359,55 +323,108 @@
 
     grid.innerHTML = TEMPLATES.map(cardHTML).join("");
 
-    // ───── Copy logic ─────
-    const toast = document.getElementById("toast");
-    const toastMsg = document.getElementById("toast-msg");
-    let toastTimer = null;
+    // ───── Preloader + entrada 3D ─────
+    // El porcentaje refleja la carga real de las miniaturas. Al llegar al 100%
+    // el loader se desvanece y las cards vuelan desde el fondo (translateZ)
+    // hasta su posición final, una tras otra.
+    (function () {
+      const loader = document.getElementById("loader");
+      const pctEl = document.getElementById("loader-pct");
+      const barEl = document.getElementById("loader-bar");
+      const cards = Array.from(grid.querySelectorAll("article"));
 
-    function showToast(msg, isError = false) {
-      toastMsg.textContent = msg;
-      toast.classList.toggle("text-red-300", isError);
-      toast.classList.add("show");
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove("show"), 2500);
-    }
-
-    async function copyTemplate(path, name, btn) {
-      const label = btn.querySelector(".copy-label");
-      const original = label.textContent;
-      label.textContent = "Copiando…";
-      btn.disabled = true;
-
-      try {
-        const res = await fetch(path);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const code = await res.text();
-        await navigator.clipboard.writeText(code);
-        label.textContent = "¡Copiado!";
-        showToast(`Código de "${name}" copiado (${(code.length / 1024).toFixed(1)} KB)`);
-      } catch (err) {
-        console.error(err);
-        label.textContent = "Error";
-        const isFileProtocol = location.protocol === "file:";
-        showToast(
-          isFileProtocol
-            ? "Abre el catálogo con un servidor local (npx serve .)"
-            : `No se pudo leer ${path}`,
-          true
-        );
-      } finally {
-        setTimeout(() => {
-          label.textContent = original;
-          btn.disabled = false;
-        }, 1600);
+      // Coloca las cards EN FILA hacia el infinito: todas centradas en el
+      // punto de fuga (centro del viewport), cada una más profunda que la
+      // anterior. El loader (opaco) cubre la página mientras tanto.
+      function queueSetup() {
+        const gr = grid.getBoundingClientRect();
+        const originX = window.innerWidth / 2 - gr.left;
+        const originY = window.innerHeight / 2 - gr.top;
+        grid.style.perspectiveOrigin = originX + "px " + originY + "px";
+        cards.forEach((c, i) => {
+          const r = c.getBoundingClientRect();
+          const dx = originX - (r.left + r.width / 2 - gr.left);
+          const dy = originY - (r.top + r.height / 2 - gr.top);
+          const z = -(850 + i * 460); // fila: cada card más lejos que la anterior
+          c.style.zIndex = String(cards.length - i); // la más cercana, delante
+          c.style.transition = "none";
+          c.style.transform = "translate3d(" + dx + "px, " + dy + "px, " + z + "px)";
+        });
+        void grid.offsetHeight; // aplicar antes de animar
       }
-    }
 
-    grid.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-copy]");
-      if (!btn) return;
-      copyTemplate(btn.dataset.copy, btn.dataset.name, btn);
-    });
+      // Despegue: una tras otra, cada card vuela del fondo hacia el frente
+      // y se recoloca en su posición final del grid. El z-index escalonado se
+      // mantiene durante TODA la secuencia (aterrizadas siempre por encima:
+      // las que aún vuelan pasan por detrás, nunca por delante) y se limpia
+      // de golpe cuando la última termina.
+      function flyIn() {
+        cards.forEach((c, i) => {
+          setTimeout(() => {
+            c.style.transition =
+              "transform 1.05s cubic-bezier(.22,1,.36,1)";
+            c.style.transform = "none";
+          }, 80 + i * 115);
+        });
+        const totalMs = 80 + (cards.length - 1) * 115 + 1100;
+        setTimeout(() => {
+          cards.forEach((c) => {
+            c.style.zIndex = "";
+            c.style.transition = "";
+            c.style.transform = "";
+          });
+        }, totalMs);
+      }
+
+      const total = TEMPLATES.length;
+      let loadedCount = 0;
+      TEMPLATES.forEach((t) => {
+        const im = new Image();
+        const bump = () => { loadedCount++; };
+        im.onload = bump;
+        im.onerror = bump; // un 404 no debe bloquear el loader
+        im.src = t.preview;
+      });
+
+      const MIN_MS = 900; // que el loader se aprecie aunque haya caché
+      const start = performance.now();
+      let shown = 0;
+      let finished = false;
+
+      function finish() {
+        if (finished) return;
+        finished = true;
+        pctEl.textContent = "100%";
+        barEl.style.width = "100%";
+        setTimeout(() => {
+          window.scrollTo(0, 0);   // el punto de fuga se calcula sobre el top
+          queueSetup();            // fila hacia el infinito (aún tapada)
+          loader.classList.add("done");
+          setTimeout(() => loader.remove(), 600);
+          flyIn();                 // despegue una tras otra hacia el frente
+        }, 250);
+      }
+
+      function tick(now) {
+        const real = (loadedCount / total) * 100;
+        const allLoaded = loadedCount >= total;
+        // Avance suave hacia el progreso real; si ya cargó todo, acelera.
+        shown += Math.max((real - shown) * 0.12, allLoaded ? 1.6 : 0);
+        if (shown > real && !allLoaded) shown = real;
+        if (shown > 100) shown = 100;
+        pctEl.textContent = Math.floor(shown) + "%";
+        barEl.style.width = shown + "%";
+        if (allLoaded && shown >= 99.5 && now - start >= MIN_MS) {
+          finish();
+        } else {
+          requestAnimationFrame(tick);
+        }
+      }
+      requestAnimationFrame(tick);
+
+      // Salvavidas: nunca dejar al usuario atrapado en el loader.
+      setTimeout(finish, 12000);
+    })();
 
     // ───── Live preview iframes ─────
     // Strategy:
@@ -419,21 +436,27 @@
     //   - ResizeObserver mantiene el escalado correcto al redimensionar.
     const VIRTUAL_W = 1440;
     const VIRTUAL_H = 1080;
-    // Tiempo extra después del onload para que React/Babel terminen el primer render.
-    // Sin este delay el iframe muestra el HTML pelado (negro) durante 1-2 segundos.
-    const FIRST_PAINT_DELAY = 1200;
+    // Cap de seguridad: si la plantilla no ha pintado en este tiempo, se revela
+    // igualmente. Normalmente se revela antes, en cuanto React pinta el hero.
+    const MAX_PAINT_WAIT = 3500;
 
     function fitIframe(stage, iframe) {
-      const w = stage.clientWidth;
-      const h = stage.clientHeight;
+      // Medidas fraccionarias reales (clientWidth/Height redondean a entero y
+      // dejaban el iframe corto). Escalamos para cubrir con overscan y CENTRAMOS
+      // el sobrante para que se recorte por igual en los 4 lados → sin bordes.
+      const rect = stage.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
       if (!w || !h) return;
-      // Card es 4:3, canvas virtual también 4:3 → scale W y H coinciden.
-      const scale = Math.max(w / VIRTUAL_W, h / VIRTUAL_H);
-      iframe.style.transform = `scale(${scale})`;
+      const OVERSCAN = 4; // px extra repartidos, recortados por overflow:hidden
+      const scale = Math.max((w + OVERSCAN) / VIRTUAL_W, (h + OVERSCAN) / VIRTUAL_H);
+      const tx = (w - VIRTUAL_W * scale) / 2;
+      const ty = (h - VIRTUAL_H * scale) / 2;
+      iframe.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
     }
 
-    function activateStage(stage) {
-      if (stage.dataset.activated === "1") return;
+    function activateStage(stage, onReady) {
+      if (stage.dataset.activated === "1") { if (onReady) onReady(); return; }
       stage.dataset.activated = "1";
 
       const src = stage.dataset.src;
@@ -443,14 +466,52 @@
         "sandbox",
         "allow-scripts allow-same-origin allow-popups allow-forms"
       );
+
+      let done = false;
+      const reveal = () => {
+        if (done) return;
+        done = true;
+        iframe.classList.add("ready");
+        stage.classList.add("iframe-ready");
+        fitIframe(stage, iframe);
+        if (onReady) onReady();
+      };
+
       iframe.addEventListener("load", () => {
-        // Damos margen para que React/Babel ejecuten el primer render antes de
-        // marcar como "ready". Si no, el iframe aparece negro al primer hover.
-        setTimeout(() => {
-          iframe.classList.add("ready");
-          stage.classList.add("iframe-ready");
-        }, FIRST_PAINT_DELAY);
+        // Ocultar las barras de scroll del iframe: el contenido desborda (dos
+        // secciones + vídeo al 120%), así que salían barras grises a la derecha
+        // y abajo que se veían como bordes feos sobre el preview.
+        try {
+          const doc = iframe.contentDocument;
+          if (doc) {
+            const st = doc.createElement("style");
+            st.textContent =
+              "html,body{overflow:hidden!important;}" +
+              "::-webkit-scrollbar{width:0!important;height:0!important;display:none!important;}";
+            (doc.head || doc.documentElement).appendChild(st);
+          }
+        } catch (e) {}
+        // Revelar en cuanto la plantilla realmente pinta (React/Babel han
+        // renderizado el hero), en vez de esperar un retardo fijo.
+        const started = performance.now();
+        const poll = () => {
+          let painted = false;
+          try {
+            const doc = iframe.contentDocument;
+            const el = doc && doc.querySelector("section, main");
+            painted = !!(el && el.getBoundingClientRect().height > 80);
+          } catch (e) { painted = true; }
+          if (painted || performance.now() - started > MAX_PAINT_WAIT) {
+            requestAnimationFrame(reveal);
+          } else {
+            requestAnimationFrame(poll);
+          }
+        };
+        requestAnimationFrame(poll);
       });
+      // Salvavidas: si 'load' no llega, no bloquear la cola de precarga.
+      setTimeout(reveal, MAX_PAINT_WAIT + 1500);
+
       iframe.src = src;
       stage.appendChild(iframe);
 
@@ -460,15 +521,36 @@
       ro.observe(stage);
     }
 
-    // En lugar de cargar todos los iframes en intersección, los cargamos al
-    // primer hover de la card. Cards no tocadas no consumen recursos.
+    // Precarga: activamos los iframes cuando la card se acerca al viewport, con
+    // concurrencia limitada para no bloquear la página. Así el hover es
+    // instantáneo. El hover activa de inmediato (salta la cola).
+    const MAX_CONCURRENT = 2;
+    let loading = 0;
+    const queue = [];
+    function pump() {
+      while (loading < MAX_CONCURRENT && queue.length) {
+        const stage = queue.shift();
+        if (stage.dataset.activated === "1") continue;
+        loading++;
+        activateStage(stage, () => { loading = Math.max(0, loading - 1); pump(); });
+      }
+    }
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        io.unobserve(entry.target);
+        const stage = entry.target.querySelector("[data-stage]");
+        if (stage && stage.dataset.activated !== "1") queue.push(stage);
+      });
+      pump();
+    }, { rootMargin: "400px 0px" });
+
     grid.querySelectorAll("[data-stage]").forEach((stage) => {
       const card = stage.closest("article");
-      const handler = () => {
-        activateStage(stage);
-        card.removeEventListener("mouseenter", handler);
-      };
-      card.addEventListener("mouseenter", handler, { once: true });
+      io.observe(card);
+      // Fallback: si el usuario hace hover antes de que le toque en la cola.
+      card.addEventListener("mouseenter", () => activateStage(stage), { once: true });
     });
   </script>
 </body>

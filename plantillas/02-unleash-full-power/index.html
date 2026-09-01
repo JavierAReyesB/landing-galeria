@@ -193,8 +193,11 @@
 
         let hls;
         let cleanupHls = () => {};
+        let objectUrl = null;
+        let aborted = false;
+        const isHls = /\.m3u8(\?|$)/i.test(src);
 
-        if (window.Hls && window.Hls.isSupported()) {
+        if (isHls && window.Hls && window.Hls.isSupported()) {
           hls = new window.Hls({
             maxBufferLength: 120,
             maxMaxBufferLength: 600,
@@ -221,9 +224,43 @@
             }
           });
           cleanupHls = () => hls.destroy();
-        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        } else if (isHls && video.canPlayType("application/vnd.apple.mpegurl")) {
           // Safari native HLS
           video.src = src;
+        } else {
+          // Vídeo local (mp4/webm): lo descargamos entero a memoria (blob) para
+          // que el seek por scroll sea instantáneo y fluido (sin re-buffering).
+          video.preload = "auto";
+          fetch(src)
+            .then((res) => {
+              const total = Number(res.headers.get("Content-Length")) || 0;
+              if (!res.body || !total) return res.blob();
+              const reader = res.body.getReader();
+              const chunks = [];
+              let received = 0;
+              const pump = () =>
+                reader.read().then(({ done, value }) => {
+                  if (done) {
+                    return new Blob(chunks, {
+                      type: res.headers.get("Content-Type") || "video/mp4",
+                    });
+                  }
+                  chunks.push(value);
+                  received += value.length;
+                  setLoadProgress(Math.min(99, (received / total) * 100));
+                  return pump();
+                });
+              return pump();
+            })
+            .then((blob) => {
+              if (aborted) return;
+              objectUrl = URL.createObjectURL(blob);
+              video.src = objectUrl;
+              setLoadProgress(100);
+            })
+            .catch(() => {
+              if (!aborted) video.src = src; // fallback: streaming directo
+            });
         }
 
         const onCanPlay = () => setCanPlay(true);
@@ -278,7 +315,9 @@
         window.addEventListener("mousemove", onMouseMove);
 
         return () => {
+          aborted = true;
           cleanupHls();
+          if (objectUrl) URL.revokeObjectURL(objectUrl);
           window.removeEventListener("mousemove", onMouseMove);
           video.removeEventListener("canplay", onCanPlay);
           video.removeEventListener("seeked", onSeeked);
@@ -752,9 +791,9 @@
 
       return (
         <>
-          <window.ScrollVideo src="https://stream.mux.com/43NlHXsaMrmyzWamMk87m01fNyxSTekAD669BBAPBNm00.m3u8" />
+          <window.ScrollVideo src="hero-scroll-video.mp4" />
           <window.PillNav />
-          <div style={{ position: "relative", height: "500vh" }}>
+          <div style={{ position: "relative", height: "1000vh" }}>
             <div className="fixed inset-0 flex flex-col justify-end p-4 md:p-8 pointer-events-none z-10">
               <window.ScrollFloat>{`Unleash The\nFull Power`}</window.ScrollFloat>
             </div>

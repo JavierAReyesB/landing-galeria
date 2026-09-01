@@ -89,3 +89,7 @@ Vía **CDN**, sin build step. Adaptación de la spec original (React + Vite + TS
 - [ ] Validar el `AnimatedText` en navegadores móviles (iOS Safari ha tenido bugs con `useScroll` sobre elementos pequeños).
 - [ ] En desktop el portrait del hero hace `translate(-50%, -50%)` por inline style; el Magnet lo overrides cuando entra el cursor — el reset al salir vuelve al `translate3d(0,0,0)` y pierde el centrado. Posible fix: aplicar el centrado al wrapper padre del Magnet (ya hecho parcialmente).
 - [ ] El catálogo (viewer) carga la plantilla en iframe — verificar que el scroll del iframe alimenta correctamente `useScroll` en Framer Motion.
+
+## 🔧 Assets
+
+Los GIFs del grid vienen de `motionsites.ai`. Uno de ellos (`hero-celestia-preview-0yO3jXO8.gif`) empezo a devolver 404, asi que se recupero desde el Internet Archive y se guarda en local como `hero-celestia-preview.gif`. Aparece 3 veces en el grid y llevaba `loading="lazy"`, por lo que el fallo solo se veia al hacer scroll.

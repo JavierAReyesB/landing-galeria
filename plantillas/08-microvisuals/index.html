@@ -152,12 +152,9 @@
     // ═════════════════════════ App ═════════════════════════
     function App() {
       const [mounted, setMounted] = useState(false);
-      const [framesReady, setFramesReady] = useState(false);
 
-      const videoRef         = useRef(null);
-      const videoBgRef       = useRef(null);
-      const displayCanvasRef = useRef(null);
-      const framesRef        = useRef([]);
+      const videoRef   = useRef(null);
+      const videoBgRef = useRef(null);
 
       // Mount fade-in
       useEffect(() => {
@@ -165,99 +162,53 @@
         return () => clearTimeout(t);
       }, []);
 
-      // Effect 1 — Frame capture (boomerang setup)
+      // Effect 1 — Scroll-driven scrub: al hacer scroll, el vídeo avanza (los
+      // capullos florecen mientras la esfera gira) según la posición de scroll.
+      // Cargamos el vídeo entero a memoria (blob) para que el seek sea
+      // instantáneo y el scrubbing quede fluido.
       useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
+        video.pause();
 
-        let capturing = true;
-        let lastTime  = -1;
-        let rafId     = null;
-        const MAX_WIDTH = 960;
-        const frames = [];
+        let objectUrl = null;
+        let aborted = false;
+        fetch(VIDEO_SRC)
+          .then((r) => r.blob())
+          .then((b) => { if (!aborted) { objectUrl = URL.createObjectURL(b); video.src = objectUrl; } })
+          .catch(() => { if (!aborted) video.src = VIDEO_SRC; });
 
-        const captureFrame = () => {
-          if (!capturing) return;
-          if (video.readyState < 2) return scheduleNext();
-          if (video.currentTime === lastTime) return scheduleNext();
-          lastTime = video.currentTime;
+        let target = 0;
+        let pending = false;
+        const maxScroll = () =>
+          (document.documentElement.scrollHeight - window.innerHeight) || 1;
 
-          const scale = Math.min(1, MAX_WIDTH / video.videoWidth);
-          const w = Math.round(video.videoWidth  * scale);
-          const h = Math.round(video.videoHeight * scale);
-
-          const off = document.createElement('canvas');
-          off.width  = w;
-          off.height = h;
-          off.getContext('2d').drawImage(video, 0, 0, w, h);
-          frames.push(off);
-          scheduleNext();
+        const doSeek = () => {
+          if (!video.duration) return;
+          if (video.seeking) { pending = true; return; }
+          video.currentTime = target;
         };
-
-        const scheduleNext = () => {
-          if (!capturing) return;
-          if ('requestVideoFrameCallback' in video) {
-            video.requestVideoFrameCallback(captureFrame);
-          } else {
-            rafId = requestAnimationFrame(captureFrame);
-          }
+        const onScroll = () => {
+          const p = Math.min(1, Math.max(0, window.scrollY / maxScroll()));
+          target = p * (video.duration || 0);
+          doSeek();
+          const hint = document.getElementById('scroll-hint');
+          if (hint) hint.style.opacity = p > 0.03 ? '0' : '1';
         };
+        const onSeeked = () => { if (pending) { pending = false; doSeek(); } };
 
-        const onLoaded = () => {
-          video.play().catch(() => {});
-          scheduleNext();
-        };
-
-        const onEnded = () => {
-          capturing = false;
-          framesRef.current = frames;
-          setFramesReady(true);
-        };
-
-        video.addEventListener('loadedmetadata', onLoaded);
-        video.addEventListener('ended', onEnded);
-        if (video.readyState >= 1) onLoaded();
+        video.addEventListener('seeked', onSeeked);
+        video.addEventListener('loadeddata', onScroll);
+        window.addEventListener('scroll', onScroll, { passive: true });
 
         return () => {
-          capturing = false;
-          if (rafId) cancelAnimationFrame(rafId);
-          video.removeEventListener('loadedmetadata', onLoaded);
-          video.removeEventListener('ended', onEnded);
+          aborted = true;
+          if (objectUrl) URL.revokeObjectURL(objectUrl);
+          video.removeEventListener('seeked', onSeeked);
+          video.removeEventListener('loadeddata', onScroll);
+          window.removeEventListener('scroll', onScroll);
         };
       }, []);
-
-      // Effect 2 — Boomerang render
-      useEffect(() => {
-        if (!framesReady) return;
-        const frames = framesRef.current;
-        if (!frames.length) return;
-
-        const canvas = displayCanvasRef.current;
-        if (!canvas) return;
-        canvas.width  = frames[0].width;
-        canvas.height = frames[0].height;
-        const ctx = canvas.getContext('2d');
-
-        let index = 0;
-        let direction = 1;
-        let last = performance.now();
-        const interval = 1000 / 30;
-        let rafId = null;
-
-        const render = (now) => {
-          if (now - last >= interval) {
-            last = now;
-            ctx.drawImage(frames[index], 0, 0);
-            index += direction;
-            if (index >= frames.length - 1) { index = frames.length - 1; direction = -1; }
-            else if (index <= 0)            { index = 0;                  direction =  1; }
-          }
-          rafId = requestAnimationFrame(render);
-        };
-        rafId = requestAnimationFrame(render);
-
-        return () => { if (rafId) cancelAnimationFrame(rafId); };
-      }, [framesReady]);
 
       // Effect 3 — Parallax mouse tracking (gsap)
       useEffect(() => {
@@ -296,25 +247,18 @@
 
       return (
         <div className="min-h-screen bg-black text-white font-body overflow-x-hidden">
-          {/* 1. Video background layer */}
+          {/* 1. Video background layer (scroll-scrubbed) */}
           <div
             ref={videoBgRef}
             className="fixed top-0 left-0 w-full h-full z-0 scale-[1.08] origin-center"
           >
             <video
               ref={videoRef}
-              src={VIDEO_SRC}
               muted
               playsInline
               preload="auto"
               crossOrigin="anonymous"
               className="w-full h-full object-cover"
-              style={{ display: framesReady ? 'none' : 'block' }}
-            />
-            <canvas
-              ref={displayCanvasRef}
-              className="w-full h-full object-cover"
-              style={{ display: framesReady ? 'block' : 'none' }}
             />
           </div>
 
@@ -394,15 +338,17 @@
             </p>
           </div>
 
-          {/* Debug — capturing state */}
-          {!framesReady && (
-            <div
-              className="fixed left-1/2 -translate-x-1/2 text-white/40 text-xs z-30 pointer-events-none"
-              style={{ bottom: '200px' }}
-            >
-              Capturing frames…
-            </div>
-          )}
+          {/* Scroll hint — se desvanece al empezar a hacer scroll */}
+          <div
+            id="scroll-hint"
+            className="fixed left-1/2 -translate-x-1/2 z-30 text-white/45 text-[11px] tracking-[0.2em] uppercase pointer-events-none transition-opacity duration-500"
+            style={{ bottom: '188px' }}
+          >
+            Scroll to bloom ↓
+          </div>
+
+          {/* Scroll spacer — da recorrido para escrubear el florecer */}
+          <div aria-hidden="true" style={{ height: '400vh' }} />
         </div>
       );
     }

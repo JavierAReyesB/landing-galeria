@@ -1,6 +1,6 @@
 # 25 — Your Vision · Our Digital Reality
 
-Hero **glassmorphism dark** con paleta purple/pink. Pill superior "Used by founders. Loved by devs." con icono Zap en cápsula gradient, **H1 con gradient text clipeado** (blanco→pink→purple), CTA glass pill con flecha. Vídeo **HLS de Cloudflare Stream** con `mix-blend-mode: screen` para fundir los negros del vídeo con el bg de la página, y una sección de **logo cloud con slider infinito** debajo (OpenAI, Nvidia, GitHub, Laravel, etc. invertidos en blanco).
+Hero **glassmorphism dark** con paleta purple/pink. Pill superior "Used by founders. Loved by devs." con icono Zap en cápsula gradient, **H1 con gradient text clipeado** (blanco→pink→purple), CTA glass pill con flecha. Vídeo **HLS de Mux** con `mix-blend-mode: screen` para fundir los negros del vídeo con el bg de la página, y una sección de **logo cloud con slider infinito** debajo (OpenAI, Nvidia, GitHub, Laravel, etc. invertidos en blanco).
 
 ## 🖼️ Preview
 
@@ -14,7 +14,7 @@ Vía **CDN**, sin build step. Adaptación de la spec original (React + Vite + Ta
 - **React 18.3.1** (UMD dev)
 - **Babel Standalone 7.29.0**
 - **Framer Motion 11.11.17** (UMD, cargada pero no usada para animaciones en este draft)
-- **hls.js 1.5.15** para el stream Cloudflare
+- **hls.js 1.5.15** para el stream de Mux
 - **Google Fonts**: Inter (400/500/600/700/800)
 
 ## 🎨 Sistema de diseño
@@ -47,7 +47,7 @@ background: linear-gradient(135deg, #fff 0%, #fff 35%, #FA93FA 70%, #983AD6 100%
 Resultado: blanco en la parte alta-izquierda que se desvanece hacia pink/purple en la parte baja-derecha.
 
 ### Hero Video con mix-blend
-- Stream HLS Cloudflare a través de hls.js.
+- Stream HLS de Mux a través de hls.js.
 - Contenedor con `margin-top: -150px` → el vídeo **se superpone detrás del texto** (text z-20, video z-10).
 - `mix-blend-mode: screen` → los píxeles negros del vídeo desaparecen, dejando ver el bg `#010101`. Solo los píxeles de luz quedan visibles.
 - Overlay gradient `linear-gradient(to bottom, #010101, transparent, #010101)` para fundir los bordes superior/inferior del vídeo con la página.
@@ -74,11 +74,11 @@ Resultado: blanco en la parte alta-izquierda que se desvanece hacia pink/purple 
 
 1. Abrir `index.html` directamente o vía el viewer del catálogo.
 2. Sin `npm install`, sin build.
-3. Stream HLS de **Cloudflare Stream** — si cae, hay que sustituir `HLS_SRC` (el spec mencionaba un fallback MP4 local, no incluido en esta versión CDN).
+3. Stream HLS de **Mux** (`8wrHPCX2dC3msyYU9ObwqNdm00u3ViXvOSHUMRYSEe5Q`). El stream original de Cloudflare Stream se borro (404 en toda la cuenta) y sus segmentos no estaban archivados, asi que se sustituyo por una cinta liquida purpura que encaja con la paleta pink/purple y con el `mix-blend-mode: screen`. Los 8 logos son ahora **locales** en `logos/` (recuperados del Internet Archive: `html.tailus.io` sirve con certificado TLS invalido).
 
 ## 📝 Notas / Pendientes
 
-- [x] Añadir `preview.png` (Captura de pantalla 2026-05-14 143647 — vista desde el viewer del catálogo mostrando el hero glassmorphism completo: pill superior, H1 con gradient blanco→purple/pink, subtítulo, CTA glass con cápsula gradient y comienzo del logo cloud bajo)
-- [ ] El stream HLS de Cloudflare creó correctamente el blob URL via MediaSource (verificado), pero `video.readyState=0` los primeros 2-3 segundos hasta que descarga el primer segmento. En pestañas backgrounded puede no llegar a parsear el manifest.
+- [ ] **`preview.png` esta obsoleta**: se capturo cuando el video y los logos ya estaban caidos, asi que muestra el hero en negro y el logo cloud vacio. Recapturar ahora que la plantilla funciona.
+- [ ] El stream HLS crea el blob URL via MediaSource, pero `video.readyState=0` los primeros 2-3 segundos hasta que descarga el primer segmento. En pestañas backgrounded puede no llegar a parsear el manifest.
 - [ ] El fallback MP4 `/_videos/v1/...` del spec original no se implementa porque es un path local que no existe en este formato CDN. Si HLS falla irrecoverablemente, el vídeo simplemente queda en negro y `mix-blend-screen` lo hace invisible.
 - [ ] Framer Motion está cargada (window.Motion) pero no se usa para animaciones en este draft — el InfiniteSlider usa CSS keyframes en su lugar.
