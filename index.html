@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Galería de landing pages</title>
+  <title>Stella·Studio — Galería de proyectos</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,7 +27,16 @@
   </script>
 
   <style>
+    html { scroll-behavior: smooth; }
     html, body { background: #f7f7f8; color: #18181b; font-family: 'Barlow', sans-serif; }
+    ::selection { background: #18181b; color: #f7f7f8; }
+    body::after {
+      /* Grano sutil: textura editorial premium */
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+      opacity: .05;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+    }
 
     /* Light card */
     .glass {
@@ -37,15 +46,20 @@
       border-radius: 1.25rem;
       border: 1px solid rgba(0,0,0,0.07);
       box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.05);
+      transition: transform .45s cubic-bezier(.22,1,.36,1), box-shadow .45s ease;
+    }
+    #grid article.glass:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05), 0 22px 48px rgba(0,0,0,0.10);
     }
 
     /* Background grid + radial glow (light) */
     .bg-grid {
       background-image:
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120,80,255,0.06), transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 120%, rgba(80,160,255,0.05), transparent 60%),
-        linear-gradient(rgba(0,0,0,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,0,0,0.035) 1px, transparent 1px);
+        radial-gradient(ellipse 70% 45% at 18% -10%, rgba(214,178,120,0.10), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 110%, rgba(120,140,255,0.06), transparent 60%),
+        linear-gradient(rgba(0,0,0,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.022) 1px, transparent 1px);
       background-size: auto, auto, 40px 40px, 40px 40px;
       background-position: 0 0, 0 0, -1px -1px, -1px -1px;
     }
@@ -65,6 +79,38 @@
       overflow: hidden;
       background: #e4e4e7;
     }
+    /* Fondo ambiental: la propia miniatura difuminada llena la card y crea un
+       halo de color de la misma tonalidad que la imagen. */
+    .preview-stage .preview-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.35);
+      filter: blur(26px) saturate(1.2);
+      opacity: .95;
+      z-index: 0;
+    }
+    /* Marco central flotante (estilo mockup): aquí viven la miniatura y el
+       live preview, con esquinas redondeadas y sombra. */
+    .preview-stage .preview-frame {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 80%;
+      aspect-ratio: 1.4;
+      transform: translate(-50%, -50%);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 12px 32px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.16);
+      z-index: 2;
+      transition: transform .5s cubic-bezier(.22,1,.36,1), box-shadow .5s ease;
+    }
+    .group:hover .preview-stage .preview-frame {
+      transform: translate(-50%, -52%) scale(1.03);
+      box-shadow: 0 20px 48px rgba(0,0,0,.36), 0 4px 12px rgba(0,0,0,.2);
+    }
     .preview-stage .preview-image {
       position: absolute;
       inset: 0;
@@ -72,13 +118,9 @@
       height: 100%;
       object-fit: cover;
       z-index: 1;
-      transition: transform .7s ease;
     }
-    .group:hover .preview-stage .preview-image {
-      transform: scale(1.04);
-    }
-    /* The iframe sits on top of the image, hidden by default, shown on card hover */
-    .preview-stage iframe {
+    /* The iframe sits inside the frame, hidden by default, shown on card hover */
+    .preview-frame iframe {
       position: absolute;
       top: 0;
       left: 0;
@@ -92,7 +134,7 @@
       z-index: 2;
     }
     /* Only show iframe when it's loaded AND the card is hovered */
-    .group:hover .preview-stage iframe.ready {
+    .group:hover .preview-frame iframe.ready {
       opacity: 1;
     }
 
@@ -157,8 +199,10 @@
       50% { opacity: 0.4; transform: scale(0.85); }
     }
 
-    /* Button press feedback */
+    /* Button press feedback + micro-interacción de flecha */
     .btn-press:active { transform: scale(0.97); }
+    .btn-press svg { transition: transform .3s ease; }
+    .btn-press:hover svg { transform: translate(2px, -2px); }
 
     /* ───── Preloader + entrada 3D de cards ───── */
     #loader { transition: opacity .55s ease; }
@@ -171,18 +215,6 @@
     #grid { perspective: 1200px; }
     #grid article { will-change: transform, opacity; }
 
-    /* Pill tag */
-    .tag {
-      display: inline-flex; align-items: center;
-      padding: 0.25rem 0.625rem;
-      font-size: 11px;
-      font-weight: 500;
-      color: #52525b;
-      background: #f4f4f5;
-      border: 1px solid rgba(0,0,0,0.07);
-      border-radius: 9999px;
-      white-space: nowrap;
-    }
   </style>
 </head>
 
@@ -191,46 +223,86 @@
   <!-- ============== PRELOADER ============== -->
   <div id="loader" class="fixed inset-0 z-[200] flex flex-col items-center justify-center" style="background:#f7f7f8;">
     <div id="loader-pct" class="font-heading italic text-7xl md:text-8xl tracking-tight text-zinc-900 tabular-nums">0%</div>
-    <div class="mt-5 text-xs uppercase tracking-[0.25em] text-zinc-500 font-medium">Cargando landings…</div>
+    <div class="mt-5 text-xs uppercase tracking-[0.25em] text-zinc-500 font-medium">Stella·Studio</div>
     <div class="mt-6 w-56 h-px bg-black/10 overflow-hidden rounded-full">
       <div id="loader-bar" class="h-full bg-zinc-900" style="width:0%; transition: width .2s ease;"></div>
     </div>
   </div>
 
+  <!-- ============== TOP BAR ============== -->
+  <nav class="px-6 md:px-10 lg:px-14 pt-6 flex items-center justify-between w-full">
+    <div class="font-heading italic text-2xl tracking-tight text-zinc-900 select-none">
+      Stella<span class="text-zinc-400 mx-0.5">·</span>Studio
+    </div>
+    <a href="mailto:hi@stella.studio" class="btn-press inline-flex items-center gap-2 glass px-5 py-2.5 text-sm font-medium hover:bg-black/5 transition-colors">
+      Hablemos
+      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+    </a>
+  </nav>
+
   <!-- ============== HEADER ============== -->
-  <header class="px-6 md:px-12 lg:px-20 pt-12 pb-8 max-w-7xl mx-auto">
-    <div class="flex items-start justify-between gap-6 flex-wrap">
-      <div>
-        <div class="text-xs uppercase tracking-[0.2em] text-zinc-500 mb-3 font-medium">
-          // Galería de proyectos
+  <header class="px-6 md:px-10 lg:px-14 pt-10 pb-8 w-full">
+    <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+      <!-- Texto -->
+      <div class="min-w-0">
+        <div class="flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-zinc-500 mb-4 font-medium">
+          <span class="h-px w-9 bg-zinc-400/70"></span>
+          Galería de proyectos
         </div>
-        <h1 class="font-heading italic text-5xl md:text-6xl lg:text-7xl leading-[0.9] tracking-tight">
-          Landing pages <br/>que convierten
+        <h1 class="font-heading italic text-5xl md:text-6xl xl:text-7xl 2xl:text-8xl leading-[0.9] tracking-tight">
+          Webs que convierten
         </h1>
-        <p class="mt-5 max-w-xl text-zinc-600 font-light">
-          Una selección de landing pages que hemos diseñado y desarrollado.
+        <p class="mt-6 text-zinc-600 font-light max-w-xl text-lg">
+          Una muestra de las webs que podemos diseñar y desarrollar.
           Explora cada proyecto en vivo y descubre <span class="font-semibold text-zinc-900">lo que podemos crear para tu marca</span>.
         </p>
+        <div class="mt-7 flex items-center gap-4 flex-wrap">
+          <a href="#grid" class="btn-press inline-flex items-center gap-2 bg-zinc-900 text-white rounded-full px-6 py-3 text-sm font-semibold hover:bg-zinc-800 transition-colors">
+            Ver proyectos
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+          </a>
+          <div class="glass px-5 py-3 flex items-center gap-3">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-sm text-zinc-600" id="count-label">— proyectos</span>
+          </div>
+        </div>
       </div>
 
-      <div class="glass px-5 py-3 flex items-center gap-3 mt-2">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span class="text-sm text-zinc-600" id="count-label">— proyectos</span>
+      <!-- Showreel de estudio: montaje rítmico de los proyectos + claims -->
+      <div class="relative rounded-3xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,.18)] ring-1 ring-black/5 bg-[#efe9df]" style="aspect-ratio: 16 / 9;">
+        <video
+          src="hero-promo.mp4"
+          autoplay
+          muted
+          loop
+          playsinline
+          class="absolute inset-0 w-full h-full object-cover"
+        ></video>
+        <div class="absolute bottom-4 left-4 z-10 px-4 py-2 rounded-full text-[10px] font-semibold tracking-[0.14em] uppercase text-white pointer-events-none" style="background:rgba(0,0,0,.45); backdrop-filter: blur(8px);">
+          Showreel · 26 proyectos
+        </div>
       </div>
     </div>
   </header>
 
   <!-- ============== GRID ============== -->
-  <main class="px-6 md:px-12 lg:px-20 pb-24 max-w-7xl mx-auto">
-    <div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  <main class="px-6 md:px-10 lg:px-14 pb-24 w-full">
+    <div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6"></div>
   </main>
 
   <!-- ============== FOOTER NOTE ============== -->
-  <footer class="px-6 md:px-12 lg:px-20 pb-10 max-w-7xl mx-auto text-sm text-zinc-500">
-    <p>
-      Cada proyecto es un ejemplo real de lo que podemos diseñar y desarrollar para tu marca.
-      <span class="font-semibold text-zinc-900">¿Imaginas la tuya?</span>
-    </p>
+  <footer class="px-6 md:px-10 lg:px-14 pb-12 pt-14 w-full">
+    <div class="h-px w-full bg-black/10 mb-10"></div>
+    <div class="flex items-end justify-between gap-8 flex-wrap">
+      <p class="font-heading italic text-3xl md:text-4xl text-zinc-900 max-w-2xl leading-tight">
+        Cada proyecto es un ejemplo real de lo que podemos crear para tu marca.
+        <span class="text-zinc-400">¿Imaginas la tuya?</span>
+      </p>
+      <div class="text-sm text-zinc-500 flex flex-col md:items-end gap-1 pb-1">
+        <span class="font-heading italic text-lg text-zinc-900">Stella·Studio</span>
+        <a class="hover:text-zinc-900 transition-colors" href="mailto:hi@stella.studio">hi@stella.studio</a>
+      </div>
+    </div>
   </footer>
 
   <!-- ============== DATA + LOGIC ============== -->
@@ -244,24 +316,33 @@
     countLabel.textContent = `${TEMPLATES.length} proyecto${TEMPLATES.length === 1 ? "" : "s"}`;
 
     function cardHTML(t, idx) {
-      const tags = t.tags.map(x => `<span class="tag">${x}</span>`).join("");
       return `
         <article class="glass flex flex-col overflow-hidden group" data-id="${t.id}">
           <!-- Preview (live iframe + image fallback) -->
           <div class="relative aspect-[4/3] overflow-hidden border-b border-black/5">
             <div class="preview-stage" data-stage data-src="${t.path}">
-              <!-- Static image — siempre visible salvo cuando se hace hover y el iframe está listo -->
+              <!-- Fondo ambiental: la miniatura difuminada (halo de la misma tonalidad) -->
               <img
                 src="${t.preview}"
-                alt="${t.name} preview"
-                class="preview-image"
+                alt=""
+                aria-hidden="true"
+                class="preview-bg"
                 onerror="this.style.display='none'"
               />
+              <!-- Marco central flotante con la miniatura y el live preview -->
+              <div class="preview-frame">
+                <img
+                  src="${t.preview}"
+                  alt="${t.name} preview"
+                  class="preview-image"
+                  onerror="this.style.display='none'"
+                />
+                <!-- iframe se inyecta aquí por JS -->
+              </div>
               <!-- "EN VIVO" pill (solo al hover cuando iframe está listo) -->
               <div class="live-pulse">EN VIVO</div>
               <!-- Hint mientras el iframe carga -->
               <div class="hover-hint">Cargando live preview…</div>
-              <!-- iframe se inyecta por JS al primer hover de la card -->
             </div>
 
             <!-- Number badge -->
@@ -295,11 +376,7 @@
             <h3 class="font-heading italic text-3xl leading-none tracking-tight mb-3">
               ${t.name}
             </h3>
-            <p class="text-sm text-zinc-600 font-light leading-snug mb-4 flex-1">
-              ${t.description}
-            </p>
-
-            <div class="flex flex-wrap gap-1.5 mb-5">${tags}</div>
+            <div class="flex-1 min-h-4"></div>
 
             <!-- Action -->
             <div class="mt-auto">
@@ -386,8 +463,8 @@
         im.src = t.preview;
       });
 
-      const MIN_MS = 900; // que el loader se aprecie aunque haya caché
-      const start = performance.now();
+      const MIN_MS = 1700; // duración mínima del barrido 0→100 (aunque haya caché)
+      let start = null;    // se fija en el PRIMER frame real (robusto a pestaña oculta)
       let shown = 0;
       let finished = false;
 
@@ -406,15 +483,19 @@
       }
 
       function tick(now) {
+        if (start === null) start = now; // arranca el reloj en el primer frame visible
         const real = (loadedCount / total) * 100;
         const allLoaded = loadedCount >= total;
-        // Avance suave hacia el progreso real; si ya cargó todo, acelera.
-        shown += Math.max((real - shown) * 0.12, allLoaded ? 1.6 : 0);
-        if (shown > real && !allLoaded) shown = real;
-        if (shown > 100) shown = 100;
+        // Barrido temporal 0→100 garantizado (easing suave), frenado por la
+        // carga real solo si la red va más lenta que el barrido.
+        const t = Math.min(1, (now - start) / MIN_MS);
+        const timeTarget = 100 * (1 - Math.pow(1 - t, 2)); // ease-out
+        const cap = allLoaded ? 100 : Math.min(95, real + 15);
+        const target = Math.min(timeTarget, cap);
+        if (target > shown) shown = target;
         pctEl.textContent = Math.floor(shown) + "%";
         barEl.style.width = shown + "%";
-        if (allLoaded && shown >= 99.5 && now - start >= MIN_MS) {
+        if (allLoaded && shown >= 99.5) {
           finish();
         } else {
           requestAnimationFrame(tick);
@@ -444,7 +525,8 @@
       // Medidas fraccionarias reales (clientWidth/Height redondean a entero y
       // dejaban el iframe corto). Escalamos para cubrir con overscan y CENTRAMOS
       // el sobrante para que se recorte por igual en los 4 lados → sin bordes.
-      const rect = stage.getBoundingClientRect();
+      const host = stage.querySelector(".preview-frame") || stage;
+      const rect = host.getBoundingClientRect();
       const w = rect.width;
       const h = rect.height;
       if (!w || !h) return;
@@ -513,7 +595,7 @@
       setTimeout(reveal, MAX_PAINT_WAIT + 1500);
 
       iframe.src = src;
-      stage.appendChild(iframe);
+      (stage.querySelector(".preview-frame") || stage).appendChild(iframe);
 
       // Escalado inicial + observador de resize
       requestAnimationFrame(() => fitIframe(stage, iframe));

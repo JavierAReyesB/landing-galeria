@@ -1,1 +1,6 @@
 .claude/settings.local.json
+
+# Archivos temporales de captura de miniaturas/promos
+plantillas/*/greencap.html
+plantillas/*/seccap.html
+plantillas/*/preview-capture.html

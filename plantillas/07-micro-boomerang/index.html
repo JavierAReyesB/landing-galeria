@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>micro — Organized. So you don't have to be.</title>
+  <title>neat — Everything in its place.</title>
 
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -49,7 +49,7 @@
       else if (!p.endsWith('/')) p += '/';
       return p + 'boomerang.mp4';
     })();
-    const PILL_IMG  = 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260507_181851_f7a6e930-087d-4ce3-978d-f982e804b7df.png&w=1280&q=85';
+    const PILL_IMG  = 'pill.jpg';
 
     // ───── Orb component ─────
     function Orb({ style, color }) {
@@ -76,6 +76,36 @@
       const [framesReady, setFramesReady] = useState(false);
       const [frameCount, setFrameCount]   = useState(0);
 
+      // Dibuja un frame repartido entre los 3 canvases (superficie continua).
+      // Compartido por la fase de captura (pintado en vivo) y el boomerang.
+      const drawFrame = (frame) => {
+        if (!frame) return;
+        const visible = canvasRefs.current.filter((c) => c && c.offsetParent !== null);
+        const n = visible.length;
+        if (n === 0) return;
+        for (let i = 0; i < visible.length; i++) {
+          const c = visible[i];
+          const cw = c.clientWidth, ch = c.clientHeight;
+          if (cw === 0 || ch === 0) continue;
+          if (c.width !== cw) c.width = cw;
+          if (c.height !== ch) c.height = ch;
+          const fw = frame.width, fh = frame.height;
+          const displayAspect = (cw * n) / ch;
+          const frameAspect   = fw / fh;
+          let sx, sy, sw, sh;
+          if (displayAspect > frameAspect) {
+            sw = fw; sh = sw / displayAspect; sx = 0; sy = (fh - sh) / 2;
+          } else {
+            sh = fh; sw = sh * displayAspect; sy = 0; sx = (fw - sw) / 2;
+          }
+          const sliceW = sw / n;
+          const sliceX = sx + sliceW * i;
+          const ctx = c.getContext('2d');
+          ctx.clearRect(0, 0, cw, ch);
+          ctx.drawImage(frame, sliceX, sy, sliceW, sh, 0, 0, cw, ch);
+        }
+      };
+
       // Capture phase: play forward, snapshot every video frame
       useEffect(() => {
         const v = videoRef.current;
@@ -99,6 +129,8 @@
           off.height = h;
           off.getContext('2d').drawImage(v, 0, 0, w, h);
           framesRef.current.push(off);
+          // Pintado en vivo: la captura ya se ve en pantalla, sin espera en negro.
+          drawFrame(off);
           if ('requestVideoFrameCallback' in v) {
             v.requestVideoFrameCallback(captureFrame);
           } else {
@@ -138,55 +170,18 @@
         const frames = framesRef.current;
         if (frames.length === 0) return;
 
-        let idx = 0;
-        let dir = 1;
+        // La captura en vivo ya mostró la pasada hacia delante: el bucle
+        // arranca desde el último frame en reversa para una continuidad total.
+        let idx = frames.length - 1;
+        let dir = -1;
         let lastTime = 0;
         const interval = 1000 / 30;
         let raf;
 
-        const draw = (idx) => {
-          const frame = frames[idx];
-          if (!frame) return;
-          const visible = canvasRefs.current.filter((c) => c && c.offsetParent !== null);
-          const n = visible.length;
-          if (n === 0) return;
-
-          for (let i = 0; i < visible.length; i++) {
-            const c = visible[i];
-            const cw = c.clientWidth, ch = c.clientHeight;
-            if (cw === 0 || ch === 0) continue;
-            if (c.width !== cw) c.width = cw;
-            if (c.height !== ch) c.height = ch;
-
-            const fw = frame.width, fh = frame.height;
-            const displayAspect = (cw * n) / ch;
-            const frameAspect   = fw / fh;
-
-            let sx, sy, sw, sh;
-            if (displayAspect > frameAspect) {
-              sw = fw;
-              sh = sw / displayAspect;
-              sx = 0;
-              sy = (fh - sh) / 2;
-            } else {
-              sh = fh;
-              sw = sh * displayAspect;
-              sy = 0;
-              sx = (fw - sw) / 2;
-            }
-            const sliceW = sw / n;
-            const sliceX = sx + sliceW * i;
-
-            const ctx = c.getContext('2d');
-            ctx.clearRect(0, 0, cw, ch);
-            ctx.drawImage(frame, sliceX, sy, sliceW, sh, 0, 0, cw, ch);
-          }
-        };
-
         const tick = (t) => {
           if (t - lastTime >= interval) {
             lastTime = t;
-            draw(idx);
+            drawFrame(frames[idx]);
             if (idx >= frames.length - 1) { idx = frames.length - 1; dir = -1; }
             else if (idx <= 0)            { idx = 0;                dir =  1; }
             idx += dir;
@@ -196,7 +191,7 @@
         raf = requestAnimationFrame(tick);
 
         // Also redraw on resize so canvas backing store stays sharp
-        const onResize = () => draw(Math.max(0, Math.min(idx, frames.length - 1)));
+        const onResize = () => drawFrame(frames[Math.max(0, Math.min(idx, frames.length - 1))]);
         window.addEventListener('resize', onResize);
 
         return () => {
@@ -223,7 +218,7 @@
               className="text-white font-semibold text-2xl tracking-tight"
               style={{ letterSpacing: '-0.02em' }}
             >
-              micro
+              neat
             </span>
             <div className="flex items-center gap-3">
               <button
@@ -353,7 +348,7 @@
                     textAlign: 'right',
                   }}
                 >
-                  Organized.
+                  Sorted.
                 </h1>
                 <p className="text-white/60 text-base italic tracking-wide">
                   So you don't have to be.

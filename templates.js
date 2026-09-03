@@ -113,7 +113,7 @@ window.TEMPLATES = [
   },
   {
     id: "11-jack-3d-creator",
-    name: "Milo — 3D Creator",
+    name: "Stella — 3D Creator",
     section: "Portfolio 5 secciones (Hero + Marquee + About + Services + Projects)",
     type: "Portfolio creativo con scroll-driven animations",
     description:
@@ -278,7 +278,7 @@ window.TEMPLATES = [
   },
   {
     id: "26-max-reed-portfolio",
-    name: "Liam Hart — Independent creator",
+    name: "Stella — Independent creator",
     section: "Features grid 3-col personal portfolio (dark)",
     type: "Bento dashboard portfolio",
     description:

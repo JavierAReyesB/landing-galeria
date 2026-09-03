@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Prisma — Visual arts collective</title>
+  <title>Obscura — Visual arts collective</title>
 
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -76,11 +76,11 @@
     const { motion, useInView, useScroll, useTransform } = window.Motion;
 
     // ───── Asset URLs ─────
-    const HERO_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4';
-    const CARD1_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260406_133058_0504132a-0cf3-4450-a370-8ea3b05c95d4.mp4';
-    const ICON_2 = 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260405_171918_4a5edc79-d78f-4637-ac8b-53c43c220606.png&w=1280&q=85';
-    const ICON_3 = 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260405_171741_ed9845ab-f5b2-4018-8ce7-07cc01823522.png&w=1280&q=85';
-    const ICON_4 = 'https://images.higgs.ai/?default=1&output=webp&url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20260405_171809_f56666dc-c099-4778-ad82-9ad4f209567b.png&w=1280&q=85';
+    const HERO_VIDEO = 'hero-video.mp4';
+    const CARD1_VIDEO = 'card-video.mp4';
+    const ICON_2 = 'icon-storyboard.jpg';
+    const ICON_3 = 'icon-critique.jpg';
+    const ICON_4 = 'icon-immersion.jpg';
 
     // ───── Lucide icons (inline) ─────
     const lucideBase = {
@@ -263,7 +263,7 @@
                 {/* Heading 8 cols */}
                 <div className="col-span-12 lg:col-span-8 relative">
                   <WordsPullUp
-                    text="Prisma"
+                    text="Obscura"
                     showAsterisk={true}
                     className="text-[26vw] sm:text-[24vw] md:text-[22vw] lg:text-[20vw] xl:text-[19vw] 2xl:text-[20vw] font-medium leading-[0.85] tracking-[-0.07em]"
                     style={{ color: '#E1E0CC' }}
@@ -280,7 +280,7 @@
                     className="text-primary/70 text-xs sm:text-sm md:text-base"
                     style={{ lineHeight: 1.2 }}
                   >
-                    Prisma is a worldwide network of visual artists, filmmakers and
+                    Obscura is a worldwide network of visual artists, filmmakers and
                     storytellers bound not by place, status or labels but by passion and
                     hunger to unlock potential through our unique perspectives.
                   </motion.p>
@@ -316,7 +316,7 @@
 
             <WordsPullUpMultiStyle
               segments={[
-                { text: 'I am Marcus Chen,', className: 'font-normal' },
+                { text: 'I am Stella,', className: 'font-normal' },
                 { text: 'a self-taught director.', className: 'italic font-serif' },
                 {
                   text:
