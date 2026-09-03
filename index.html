@@ -204,9 +204,19 @@
     .btn-press svg { transition: transform .3s ease; }
     .btn-press:hover svg { transform: translate(2px, -2px); }
 
-    /* ───── Preloader + entrada 3D de cards ───── */
+    /* ───── Preloader: rueda de texto giratoria ───── */
     #loader { transition: opacity .55s ease; }
     #loader.done { opacity: 0; pointer-events: none; }
+    .loader-wheel { animation: loader-spin 9s linear infinite; transform-origin: 50% 50%; }
+    .loader-wheel-text {
+      font-family: 'Barlow', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.34em;
+      text-transform: uppercase;
+    }
+    @keyframes loader-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .loader-wheel { animation: none; } }
 
     /* El grid define la perspectiva. Las cards arrancan APILADAS EN FILA en el
        centro de la pantalla, cada una más profunda que la anterior (un tren que
@@ -220,73 +230,101 @@
 
 <body class="bg-grid min-h-screen">
 
-  <!-- ============== PRELOADER ============== -->
-  <div id="loader" class="fixed inset-0 z-[200] flex flex-col items-center justify-center" style="background:#f7f7f8;">
-    <div id="loader-pct" class="font-heading italic text-7xl md:text-8xl tracking-tight text-zinc-900 tabular-nums">0%</div>
-    <div class="mt-5 text-xs uppercase tracking-[0.25em] text-zinc-500 font-medium">Stella·Studio</div>
-    <div class="mt-6 w-56 h-px bg-black/10 overflow-hidden rounded-full">
-      <div id="loader-bar" class="h-full bg-zinc-900" style="width:0%; transition: width .2s ease;"></div>
+  <!-- ============== PRELOADER (rueda de texto giratoria) ============== -->
+  <div id="loader" class="fixed inset-0 z-[200] flex items-center justify-center" style="background:#f7f7f8;">
+    <div class="relative" style="width:300px; height:300px;">
+      <!-- Texto circular girando -->
+      <svg class="loader-wheel absolute inset-0 w-full h-full" viewBox="0 0 300 300" aria-hidden="true">
+        <defs>
+          <path id="loader-circle" d="M150,150 m-118,0 a118,118 0 1,1 236,0 a118,118 0 1,1 -236,0" />
+        </defs>
+        <text class="loader-wheel-text" fill="#18181b">
+          <textPath href="#loader-circle" startOffset="0" textLength="741" lengthAdjust="spacing">STELLA · STUDIO • STELLA · STUDIO • STELLA · STUDIO •</textPath>
+        </text>
+      </svg>
+      <!-- Porcentaje en el centro -->
+      <div class="absolute inset-0 flex items-center justify-center">
+        <div id="loader-pct" class="font-heading italic text-6xl md:text-7xl tracking-tight text-zinc-900 tabular-nums">0%</div>
+      </div>
     </div>
+    <!-- valor de progreso (barra oculta, se mantiene por compatibilidad del JS) -->
+    <div id="loader-bar" style="display:none; width:0%;"></div>
   </div>
 
-  <!-- ============== TOP BAR ============== -->
-  <nav class="px-6 md:px-10 lg:px-14 pt-6 flex items-center justify-between w-full">
-    <div class="font-heading italic text-2xl tracking-tight text-zinc-900 select-none">
-      Stella<span class="text-zinc-400 mx-0.5">·</span>Studio
-    </div>
-    <a href="mailto:hi@stella.studio" class="btn-press inline-flex items-center gap-2 glass px-5 py-2.5 text-sm font-medium hover:bg-black/5 transition-colors">
-      Hablemos
-      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
-    </a>
-  </nav>
+  <!-- ============== HERO a pantalla completa (vídeo full-bleed) ============== -->
+  <header class="relative w-full h-[62vh] min-h-[440px] sm:h-screen sm:min-h-[600px] overflow-hidden flex items-end">
+      <!-- Fondo difuminado del propio reel: rellena el hero alrededor del cuadro -->
+      <video
+        src="hero-promo.mp4"
+        autoplay muted loop playsinline aria-hidden="true"
+        class="absolute inset-0 w-full h-full object-cover z-0"
+        style="filter: blur(34px) saturate(1.15); transform: scale(1.25);"
+      ></video>
+      <!-- El reel como CUADRO central enmarcado (redondeado + sombra) -->
+      <div class="absolute inset-0 z-[1] flex items-center justify-center p-4 sm:p-8 lg:p-14">
+        <div class="w-full max-w-[1700px] max-h-full overflow-hidden rounded-xl sm:rounded-2xl shadow-[0_30px_80px_rgba(0,0,0,.5)] ring-1 ring-white/10" style="aspect-ratio:16/9;">
+          <video
+            src="hero-promo.mp4"
+            autoplay muted loop playsinline
+            class="w-full h-full object-cover"
+          ></video>
+        </div>
+      </div>
 
-  <!-- ============== HEADER ============== -->
-  <header class="px-6 md:px-10 lg:px-14 pt-10 pb-8 w-full">
-    <div class="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-      <!-- Texto -->
-      <div class="min-w-0">
-        <div class="flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-zinc-500 mb-4 font-medium">
+      <!-- Barra superior superpuesta sobre el vídeo -->
+      <nav class="absolute top-0 left-0 right-0 z-30 px-6 md:px-10 lg:px-14 pt-7 flex items-center justify-between">
+        <div class="font-heading italic text-2xl tracking-tight text-white select-none" style="text-shadow:0 1px 12px rgba(0,0,0,.5);">
+          Stella<span class="text-white/60 mx-0.5">·</span>Studio
+        </div>
+        <a href="mailto:hi@stella.studio" class="btn-press inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-white transition-colors" style="background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); backdrop-filter:blur(6px);">
+          Hablemos
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+        </a>
+      </nav>
+      <!-- Scrim sobre el fondo difuminado (debajo del cuadro): contraste para
+           la nav arriba y la flecha/chip abajo -->
+      <div class="absolute inset-0 z-0 pointer-events-none"
+           style="background: linear-gradient(to bottom, rgba(0,0,0,.5) 0%, rgba(0,0,0,0) 18%, rgba(0,0,0,0) 78%, rgba(0,0,0,.45) 100%);"></div>
+
+      <!-- Chip showreel abajo-izquierda (oculto en móvil para no chocar con la flecha) -->
+      <div class="hidden sm:flex absolute bottom-6 left-6 md:left-10 lg:left-14 z-20 px-4 py-2 rounded-full text-[10px] font-semibold tracking-[0.14em] uppercase text-white pointer-events-none items-center gap-2" style="background:rgba(0,0,0,.4); backdrop-filter: blur(8px);">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        Showreel · 26 proyectos
+      </div>
+
+      <!-- Indicador de scroll -->
+      <a href="#projects" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 text-white/75 hover:text-white transition-colors" aria-label="Bajar a los proyectos">
+        <svg class="w-6 h-6 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+      </a>
+  </header>
+
+  <!-- ============== SECCIÓN PROYECTOS (cabecera + grid) ============== -->
+  <main id="projects" class="px-6 md:px-10 lg:px-14 pt-20 md:pt-24 lg:pt-28 pb-24 w-full">
+    <!-- Cabecera de sección -->
+    <div class="mb-14 md:mb-16">
+      <!-- Fila superior (reparte el ancho): eyebrow · contador -->
+      <div class="flex items-center justify-between gap-4 pb-6 mb-8 border-b border-black/10">
+        <div class="flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-zinc-500 font-medium">
           <span class="h-px w-9 bg-zinc-400/70"></span>
           Galería de proyectos
         </div>
-        <h1 class="font-heading italic text-5xl md:text-6xl xl:text-7xl 2xl:text-8xl leading-[0.9] tracking-tight">
+        <div class="glass px-5 py-2.5 inline-flex items-center gap-3 shrink-0">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-sm text-zinc-600" id="count-label">— proyectos</span>
+        </div>
+      </div>
+      <!-- Título + descripción centrados -->
+      <div class="text-center max-w-3xl mx-auto pt-2">
+        <h1 class="font-heading italic text-5xl md:text-6xl xl:text-7xl 2xl:text-8xl leading-[0.9] tracking-tight text-zinc-900">
           Webs que convierten
         </h1>
-        <p class="mt-6 text-zinc-600 font-light max-w-xl text-lg">
+        <p class="mt-6 text-zinc-600 font-light text-lg max-w-2xl mx-auto">
           Una muestra de las webs que podemos diseñar y desarrollar.
           Explora cada proyecto en vivo y descubre <span class="font-semibold text-zinc-900">lo que podemos crear para tu marca</span>.
         </p>
-        <div class="mt-7 flex items-center gap-4 flex-wrap">
-          <a href="#grid" class="btn-press inline-flex items-center gap-2 bg-zinc-900 text-white rounded-full px-6 py-3 text-sm font-semibold hover:bg-zinc-800 transition-colors">
-            Ver proyectos
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
-          </a>
-          <div class="glass px-5 py-3 flex items-center gap-3">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span class="text-sm text-zinc-600" id="count-label">— proyectos</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Showreel de estudio: montaje rítmico de los proyectos + claims -->
-      <div class="relative rounded-3xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,.18)] ring-1 ring-black/5 bg-[#efe9df]" style="aspect-ratio: 16 / 9;">
-        <video
-          src="hero-promo.mp4"
-          autoplay
-          muted
-          loop
-          playsinline
-          class="absolute inset-0 w-full h-full object-cover"
-        ></video>
-        <div class="absolute bottom-4 left-4 z-10 px-4 py-2 rounded-full text-[10px] font-semibold tracking-[0.14em] uppercase text-white pointer-events-none" style="background:rgba(0,0,0,.45); backdrop-filter: blur(8px);">
-          Showreel · 26 proyectos
-        </div>
       </div>
     </div>
-  </header>
 
-  <!-- ============== GRID ============== -->
-  <main class="px-6 md:px-10 lg:px-14 pb-24 w-full">
     <div id="grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6"></div>
   </main>
 
@@ -308,6 +346,11 @@
   <!-- ============== DATA + LOGIC ============== -->
   <script src="templates.js"></script>
   <script>
+    // Al recargar, arrancar SIEMPRE arriba (en el hero), no donde estabas.
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
+    window.addEventListener("load", () => window.scrollTo(0, 0));
+
     const TEMPLATES = window.TEMPLATES;
 
     // ───── Render ─────
@@ -415,8 +458,11 @@
       // anterior. El loader (opaco) cubre la página mientras tanto.
       function queueSetup() {
         const gr = grid.getBoundingClientRect();
-        const originX = window.innerWidth / 2 - gr.left;
-        const originY = window.innerHeight / 2 - gr.top;
+        const vh = window.innerHeight || document.documentElement.clientHeight || 800;
+        // Punto de fuga DENTRO del grid (centro horizontal, cerca de su parte
+        // alta) para que las cards emerjan bajo el título y no se monten sobre él.
+        const originX = gr.width / 2;
+        const originY = Math.min(gr.height * 0.5, vh * 0.4);
         grid.style.perspectiveOrigin = originX + "px " + originY + "px";
         cards.forEach((c, i) => {
           const r = c.getBoundingClientRect();
@@ -468,17 +514,46 @@
       let shown = 0;
       let finished = false;
 
+      // Deja las cards ocultas y dispara el vuelo (fila desde el horizonte)
+      // cuando el grid entra en pantalla al hacer scroll.
+      function armEntranceOnScroll() {
+        cards.forEach((c) => { c.style.opacity = "0"; });
+        let fired = false;
+        const trigger = () => {
+          if (fired) return;
+          fired = true;
+          queueSetup();
+          cards.forEach((c) => { c.style.opacity = "1"; });
+          void grid.offsetHeight;
+          flyIn();
+        };
+        const io = new IntersectionObserver((entries) => {
+          entries.forEach((e) => { if (e.isIntersecting) { trigger(); io.disconnect(); } });
+        }, { threshold: 0, rootMargin: "0px 0px -40% 0px" });
+        io.observe(grid);
+        // Fallback por scroll (por si el IO no dispara en algún navegador):
+        // lanza cuando el grid ha entrado ~40% en el viewport.
+        const onScroll = () => {
+          const vh = window.innerHeight || document.documentElement.clientHeight;
+          if (!vh) return;
+          if (grid.getBoundingClientRect().top < vh * 0.6) {
+            trigger();
+            io.disconnect();
+            window.removeEventListener("scroll", onScroll);
+          }
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+      }
+
       function finish() {
         if (finished) return;
         finished = true;
         pctEl.textContent = "100%";
         barEl.style.width = "100%";
         setTimeout(() => {
-          window.scrollTo(0, 0);   // el punto de fuga se calcula sobre el top
-          queueSetup();            // fila hacia el infinito (aún tapada)
           loader.classList.add("done");
           setTimeout(() => loader.remove(), 600);
-          flyIn();                 // despegue una tras otra hacia el frente
+          armEntranceOnScroll();   // el vuelo espera al scroll hasta el grid
         }, 250);
       }
 
